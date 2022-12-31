@@ -1,0 +1,6 @@
+pillow
+url-normalize
+matplotlib
+requests
+tqdm
+scipy
