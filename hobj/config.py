@@ -1,4 +1,6 @@
 import os
+import torch
+
 hlb_cachedir = os.path.join(os.path.expanduser('~'), 'hlb_cache')
 
 image_cachedir = os.path.join(hlb_cachedir, 'images')
@@ -8,7 +10,6 @@ features_cachedir = os.path.join(hlb_cachedir, 'image_features')
 
 device = 'cpu'
 
-import torch
 
 if torch.cuda.is_available():
     print("Using GPU")

@@ -202,6 +202,7 @@ class MAE(UpdateRule):
         delta = x[:, None] * gts[None, :]
         return delta, 0
 
+
 class Exponential(UpdateRule):
 
     max_weight_norm = 10.0
