@@ -38,7 +38,7 @@ class MutatorHighVarBenchmark(Benchmark):
             worker_dim='worker_id'
         )
 
-    def evaluate_model(self, learner: lm.LearningModel, force_recompute: bool = False, seed = None):
+    def evaluate_model(self, learner: lm.LearningModel, force_recompute: bool = False, seed = None) -> xr.Dataset:
         """
         :param learner: LearningModel
         :param force_recompute: bool. If True, recompute the model behavior, even if it is already cached.

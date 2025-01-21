@@ -1,8 +1,9 @@
 import numpy as np
 import scipy.special
 
+
 class UpdateRule(object):
-    def __init__(self, alpha:float):
+    def __init__(self, alpha: float):
         """
         Implements an update rule for a linear learner. Assumes that all features have at most norm 1.
         :param alpha: the normalized learning rate. Between 0 and 1.
@@ -22,9 +23,9 @@ class UpdateRule(object):
 
     @property
     def update_rule_id(self):
-        return str(self.__class__.__name__) + '_%0.3e'%(self.alpha)
+        return str(self.__class__.__name__) + '_%0.3e' % (self.alpha)
 
-    def get_update(self, x:np.ndarray, w: np.ndarray, b:np.ndarray, logits: np.ndarray, action: int, reward: float):
+    def get_update(self, x: np.ndarray, w: np.ndarray, b: np.ndarray, logits: np.ndarray, action: int, reward: float):
         """
         Returns delta_w and delta_b, where
         w{t+1} = w{t} + delta_w
@@ -44,14 +45,14 @@ class UpdateRule(object):
 
 
 class Prototype(UpdateRule):
-
     """
     Simulates the decision boundary implemented by a prototype learner.
     """
+
     def reset(self):
         self.ncounts = None
 
-    def get_update(self, x:np.ndarray, w: np.ndarray, b:np.ndarray, logits: np.ndarray, action: int, reward: float):
+    def get_update(self, x: np.ndarray, w: np.ndarray, b: np.ndarray, logits: np.ndarray, action: int, reward: float):
         """
         Returns delta_w and delta_b, where
         w{t+1} = w{t} + delta_w
@@ -68,7 +69,6 @@ class Prototype(UpdateRule):
         if self.ncounts is None:
             self.ncounts = np.zeros(w.shape[1])
 
-
         if reward > 0:
             # Received a positive example of the class associated with the action
             i_updated_class = action
@@ -81,7 +81,7 @@ class Prototype(UpdateRule):
 
         mu_cur = w[:, i_updated_class]
         n = self.ncounts[i_updated_class]
-        mu_next = (n / (n+1)) * mu_cur + (1 / (n+1)) * x
+        mu_next = (n / (n + 1)) * mu_cur + (1 / (n + 1)) * x
         norm_next = np.square(np.linalg.norm(mu_next))
 
         delta_w = np.zeros(w.shape)
@@ -92,9 +92,10 @@ class Prototype(UpdateRule):
 
         return delta_w, delta_b
 
+
 class Square(UpdateRule):
 
-    def get_update(self, x:np.ndarray, w: np.ndarray, b:np.ndarray, logits: np.ndarray, action: int, reward: float):
+    def get_update(self, x: np.ndarray, w: np.ndarray, b: np.ndarray, logits: np.ndarray, action: int, reward: float):
         """
         Returns delta_w and delta_b, where
         w{t+1} = w{t} + delta_w
@@ -119,7 +120,7 @@ class Square(UpdateRule):
 
 class Perceptron(UpdateRule):
 
-    def get_update(self, x:np.ndarray, w: np.ndarray, b:np.ndarray, logits: np.ndarray, action: int, reward: float):
+    def get_update(self, x: np.ndarray, w: np.ndarray, b: np.ndarray, logits: np.ndarray, action: int, reward: float):
         """
         Returns delta_w and delta_b, where
         w{t+1} = w{t} + delta_w
@@ -139,7 +140,7 @@ class Perceptron(UpdateRule):
 
         yhat = logits[action]
         z = reward * yhat
-        if z <= 0 :
+        if z <= 0:
             gts[action] = self.alpha * reward
         delta = x[:, None] * gts[None, :]
         return delta, 0
@@ -147,7 +148,7 @@ class Perceptron(UpdateRule):
 
 class Hinge(UpdateRule):
 
-    def get_update(self, x:np.ndarray, w: np.ndarray, b:np.ndarray, logits: np.ndarray, action: int, reward: float):
+    def get_update(self, x: np.ndarray, w: np.ndarray, b: np.ndarray, logits: np.ndarray, action: int, reward: float):
         """
         Returns delta_w and delta_b, where
         w{t+1} = w{t} + delta_w
@@ -167,7 +168,7 @@ class Hinge(UpdateRule):
 
         yhat = logits[action]
         z = reward * yhat
-        if z <= 1:# and yhat >= 0:
+        if z <= 1:  # and yhat >= 0:
             gts[action] = self.alpha * reward
         delta = x[:, None] * gts[None, :]
         return delta, 0
@@ -175,7 +176,7 @@ class Hinge(UpdateRule):
 
 class MAE(UpdateRule):
 
-    def get_update(self, x:np.ndarray, w: np.ndarray, b:np.ndarray, logits: np.ndarray, action: int, reward: float):
+    def get_update(self, x: np.ndarray, w: np.ndarray, b: np.ndarray, logits: np.ndarray, action: int, reward: float):
         """
         Returns delta_w and delta_b, where
         w{t+1} = w{t} + delta_w
@@ -204,10 +205,9 @@ class MAE(UpdateRule):
 
 
 class Exponential(UpdateRule):
-
     max_weight_norm = 10.0
 
-    def get_update(self, x:np.ndarray, w: np.ndarray, b:np.ndarray, logits: np.ndarray, action: int, reward: float):
+    def get_update(self, x: np.ndarray, w: np.ndarray, b: np.ndarray, logits: np.ndarray, action: int, reward: float):
         """
         Returns delta_w and delta_b, where
         w{t+1} = w{t} + delta_w
@@ -235,11 +235,9 @@ class Exponential(UpdateRule):
         return delta, 0
 
 
-
-
 class CE(UpdateRule):
 
-    def get_update(self, x:np.ndarray, w: np.ndarray, b:np.ndarray, logits: np.ndarray, action: int, reward: float):
+    def get_update(self, x: np.ndarray, w: np.ndarray, b: np.ndarray, logits: np.ndarray, action: int, reward: float):
         """
         Returns delta_w and delta_b, where
         w{t+1} = w{t} + delta_w
@@ -261,7 +259,7 @@ class CE(UpdateRule):
 
         delta = x[:, None] * gts[None, :]
         return delta, 0
-[]
+
 
 class REINFORCE(UpdateRule):
 
@@ -292,8 +290,7 @@ class REINFORCE(UpdateRule):
         expression[action_taken] = 1 + expression[action_taken]
         return expression
 
-
-    def get_update(self, x:np.ndarray, w: np.ndarray, b:np.ndarray, logits: np.ndarray, action: int, reward: float):
+    def get_update(self, x: np.ndarray, w: np.ndarray, b: np.ndarray, logits: np.ndarray, action: int, reward: float):
         """
         Returns delta_w and delta_b, where
         w{t+1} = w{t} + delta_w
@@ -311,4 +308,3 @@ class REINFORCE(UpdateRule):
 
         delta = x[:, None] * gt[None, :]
         return delta, 0
-

@@ -22,7 +22,7 @@ def get_image_location(image_url: str, cachedir=config.image_cachedir):
     return save_location
 
 
-def get_image(image_url: str, cachedir=config.image_cachedir):
+def get_image(image_url: str, cachedir=config.image_cachedir) -> PIL.Image:
     """
     Download an image from a URL and return it as a PIL.Image.
     If cached, return the cached image.
