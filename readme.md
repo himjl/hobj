@@ -1,5 +1,7 @@
 # Human object learning benchmarks
 
+[![CI](https://github.com/himjl/hobj/actions/workflows/ci.yml/badge.svg)](https://github.com/himjl/hobj/actions/workflows/ci.yml)
+
 This repository contains benchmarks for comparing models of object learning against psychometric measurements of human behavior. 
 
 # Installation
