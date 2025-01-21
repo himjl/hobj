@@ -4,7 +4,6 @@ import numpy as np
 import xarray as xr
 
 from hobj.behavioral_data import human_data as human_data
-from hobj.benchmarks.benchmarks import Benchmark
 from hobj.learning_models import learning_model as lm
 from hobj.utils import stats as stats
 import hobj.benchmarks.leedicarlo_benchmarks.MutatorHighVar.mut_highvar_experiment as mutator
@@ -17,7 +16,7 @@ import hobj.statistics.hypothesis_testing.bootstrapped_confidence_intervals as b
 import hobj.statistics.hypothesis_testing.approximated_null_distribution as approximated_null_distribution
 
 
-class MutatorHighVarBenchmark(Benchmark):
+class MutatorHighVarBenchmark:
 
     def __init__(self):
         super().__init__()

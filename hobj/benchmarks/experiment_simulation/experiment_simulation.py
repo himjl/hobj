@@ -8,6 +8,7 @@ import numpy as np
 from tqdm import tqdm
 from typing import Union
 
+
 class ExperimentSimulation(object):
     """
     Wraps a set of environments, and simulates them self.nreps times each
@@ -32,7 +33,7 @@ class ExperimentSimulation(object):
 
     def run(self, learner: lm.LearningModel, seed: Union[type(None), int], force_recompute=False, show_pbar=True):
 
-        savepath = os.path.join(self.cachedir, self.experiment_name, 'seed_'+str(seed), f'ds_{learner.learner_id}.nc')
+        savepath = os.path.join(self.cachedir, self.experiment_name, 'seed_' + str(seed), f'ds_{learner.learner_id}.nc')
         if os.path.exists(savepath) and not force_recompute:
             ds = xr.load_dataset(savepath)
             return ds
@@ -49,12 +50,12 @@ class ExperimentSimulation(object):
             ds = self.postprocess_behavioral_data(ds=ds, environment=environment)
             dlist.append(ds)
 
-        ds = xr.concat(dlist, dim = self.environment_name_dim, )
+        ds = xr.concat(dlist, dim=self.environment_name_dim, )
         io.prepare_savepath(savepath)
         ds.to_netcdf(savepath)
         return ds
 
-    def postprocess_behavioral_data(self, ds:xr.Dataset, environment:env.Environment):
+    def postprocess_behavioral_data(self, ds: xr.Dataset, environment: env.Environment):
         """
         Called following the simulation of a single environment. Allows for postprocessing of the behavioral data.
         :param ds:
@@ -100,8 +101,7 @@ class ExperimentSimulation(object):
                 for k in environment.current_state_meta:
                     d[k][1][i_trial, i_rep] = (environment.current_state_meta[k])
 
-
         ds = xr.Dataset(d)
         ds = ds.assign_coords(environment.meta)
-        ds = ds.assign_coords(image_url = ds['image_url'])
+        ds = ds.assign_coords(image_url=ds['image_url'])
         return ds

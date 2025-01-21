@@ -9,7 +9,6 @@ import hobj.images.imagesets as imagesets
 import hobj.benchmarks.leedicarlo_benchmarks.MutatorOneshot.mut_oneshot_experiment as mutator
 
 
-import hobj.benchmarks.benchmarks as benchmarks
 import hobj.behavioral_data.human_data as human_data
 from hobj.statistics.resamplers.resamplers import Resampler
 import hobj.statistics.score_statistics.MSEn as R2n_funcs
@@ -18,7 +17,7 @@ import hobj.statistics.hypothesis_testing.bootstrapped_confidence_intervals as b
 import hobj.statistics.hypothesis_testing.approximated_null_distribution as approximated_null_distribution
 
 
-class MutatorOneshotBenchmark(benchmarks.Benchmark):
+class MutatorOneshotBenchmark:
     environment_name_dim = 'session'
 
     def __init__(self):
