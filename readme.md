@@ -19,10 +19,6 @@ pip install -e .
 ```bash
 conda install -c conda-forge xarray dask netCDF4 bottleneck
 ```
-5. Install [PyTorch](https://pytorch.org). If you are using a computer without a GPU, you can run the command:
-```bash
-conda install pytorch torchvision torchaudio -c pytorch
-```
 
 ### Download all images (recommended)
 
