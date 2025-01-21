@@ -10,7 +10,7 @@ else:
 print(find_packages())
 setup(
     name="hobj",
-    version="0.1",
+    version="2.0.0",
     packages=find_packages(),
     install_requires=requirements,
     author="Michael J. Lee",
