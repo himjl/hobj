@@ -1,12 +1,13 @@
 import numpy as np
 
 
-class RepresentationalModel(object):
+class RepresentationalModel:
     """
     Model which represents image_urls as feature vectors of shape (d,).
     Meant to be subclassed (see PrecachedRepresentationalModel below for an example).
     """
-    def __init__(self, representational_model_id:str):
+
+    def __init__(self, representational_model_id: str):
         self.representational_model_id = representational_model_id
         self._d = 1
         return
@@ -18,7 +19,6 @@ class RepresentationalModel(object):
         :return: None
         """
         return
-
 
     @property
     def d(self):
@@ -34,7 +34,7 @@ class RepresentationalModel(object):
         assert value > 0
         self._d = value
 
-    def get_features(self, image_url: str):
+    def get_features(self, image_url: str) -> np.ndarray:
         """
         Returns a feature vector for the image_url.
         To work successfully with UpdateRule, the feature vector must be of shape (d,) and have norm 1.
@@ -47,10 +47,9 @@ class RepresentationalModel(object):
 class PrecachedRepresentationalModel(RepresentationalModel):
 
     def __init__(self, url_to_features: dict, representational_model_id: str):
-
         self.url_to_features = url_to_features
         super().__init__(representational_model_id=representational_model_id)
         self.d = len(url_to_features[list(url_to_features.keys())[0]])
 
-    def get_features(self, image_url: str):
+    def get_features(self, image_url: str) -> np.ndarray:
         return self.url_to_features[image_url]

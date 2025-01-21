@@ -2,6 +2,7 @@ import hobj.config as config
 import os
 import xarray as xr
 import hobj.images.load_image as load_image
+import PIL.Image
 
 image_meta_loc = os.path.join(os.path.dirname(__file__), 'image_meta')
 
@@ -13,7 +14,7 @@ class Imageset(object):
         self.cachedir = cachedir
         return
 
-    def load_image(self, image_url: str):
+    def load_image(self, image_url: str) -> PIL.Image:
         return load_image.get_image(image_url=image_url, cachedir=self.cachedir)
 
     @property
