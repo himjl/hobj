@@ -1,20 +1,22 @@
-from setuptools import setup, find_packages
-import os
+from setuptools import setup
 
-if os.path.exists('requirements.txt'):
-    with open('requirements.txt', 'r') as fb:
-        requirements = fb.readlines()
-else:
-    requirements = []
+# Function to read the requirements.txt file
+def parse_requirements(filename):
+    with open(filename, 'r') as file:
+        return [line.strip() for line in file if line.strip() and not line.startswith('#')]
 
-print(find_packages())
+
+# Read dependencies from requirements.txt
+requirements = parse_requirements('requirements.txt')
+
 setup(
     name="hobj",
     version="2.0.0",
-    packages=find_packages(),
+    packages=['hobj'],
     install_requires=requirements,
     author="Michael J. Lee",
     author_email="mil@mit.edu",
     description="Human object learning benchmarks",
     keywords="",
+    python_requires='>=3.11',
 )
