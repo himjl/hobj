@@ -11,10 +11,11 @@ from tqdm import tqdm
 import json
 
 
-def get_canonical_url(url:str):
-    return url_normalize.url_normalize(url = url)
+def get_canonical_url(url: str):
+    return url_normalize.url_normalize(url=url)
 
-def get_local_save_location(url:str, cachedir:str):
+
+def get_local_save_location(url: str, cachedir: str):
     canonical_url = get_canonical_url(url)
     parsed = urlparse(canonical_url)
 
@@ -22,24 +23,27 @@ def get_local_save_location(url:str, cachedir:str):
     if path.startswith('/'):
         path = path[1:]
 
-    domain = parsed.netloc # domain is the hostname
+    domain = parsed.netloc  # domain is the hostname
     save_location = os.path.join(cachedir, domain, path)
     return save_location
+
 
 def prepare_savepath(savepath):
     savedir = os.path.dirname(savepath)
     if not os.path.exists(savedir):
         os.makedirs(savedir, exist_ok=True)
 
-def get_image_from_url(image_url:str):
+
+def get_image_from_url(image_url: str):
     response = requests.get(image_url)
     img = PIL.Image.open(BytesIO(response.content))
     return img
 
-def download_file(url:str, savepath=None,cachedir:str=None):
+
+def download_file(url: str, savepath=None, cachedir: str = None):
     if savepath is None:
         assert cachedir is not None
-        savepath = get_local_save_location(url = url, cachedir=cachedir)
+        savepath = get_local_save_location(url=url, cachedir=cachedir)
 
     prepare_savepath(savepath)
 
@@ -63,8 +67,8 @@ def download_file(url:str, savepath=None,cachedir:str=None):
 
         return update_to
 
-    with tqdm(desc = f'downloading {url}') as pbar:
-        urllib.request.urlretrieve(url = url, filename=savepath, reporthook=my_hook(pbar))
+    with tqdm(desc=f'downloading {url}') as pbar:
+        urllib.request.urlretrieve(url=url, filename=savepath, reporthook=my_hook(pbar))
     return savepath
 
 
@@ -72,4 +76,3 @@ def load_json(json_path):
     with open(json_path, 'r') as fb:
         val = json.load(fb)
     return val
-

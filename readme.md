@@ -15,7 +15,7 @@ We developed this repository using Python 3.9. Follow the steps below to use it:
 ```bash
 pip install -e .
 ```
-4. Then, install the following dependencies:
+4. Then, install [xarray](https://docs.xarray.dev/en/latest/getting-started-guide/installing.html) and its dependencies by running the following command:
 ```bash
 conda install -c conda-forge xarray dask netCDF4 bottleneck
 ```
