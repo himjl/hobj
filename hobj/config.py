@@ -7,5 +7,4 @@ behavior_cachedir = os.path.join(hlb_cachedir, 'behavior')
 simulation_cachedir = os.path.join(hlb_cachedir, 'model_simulations')
 features_cachedir = os.path.join(hlb_cachedir, 'image_features')
 
-device = 'cpu'
 
