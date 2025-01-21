@@ -1,7 +1,6 @@
 # Human object learning benchmarks
 
-This repository contains code for comparing models of human object learning against measurements of human behavior (n=371k trials). 
-
+This repository contains benchmarks for comparing models of object learning against psychometric measurements of human behavior. 
 
 # Installation
 
