@@ -2,6 +2,7 @@
 
 This repository contains code for comparing models of human object learning against measurements of human behavior (n=371k trials). 
 
+
 # Installation
 
 We developed this repository using Python 3.9. Follow the steps below to use it: 
@@ -34,3 +35,7 @@ Once it is downloaded, unzip it (it should turn into an `images` folder). Move t
 To see how to view the raw behavioral data and/or score an example learning model, check out the examples in
 `examples/`.
 
+
+# Paper
+This codebase originally accompanied the 2023 paper ["How well do rudimentary plasticity rules predict adult visual object learning?"](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1011713).
+Since that point, this codebase has been refactored and streamlined, introducing breaking changes to the API. However, to see the codebase that reflects its content at the time of publication, check out the `v1` tag.
