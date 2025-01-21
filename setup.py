@@ -1,13 +1,8 @@
 from setuptools import setup
 
-# Function to read the requirements.txt file
-def parse_requirements(filename):
-    with open(filename, 'r') as file:
-        return [line.strip() for line in file if line.strip() and not line.startswith('#')]
-
-
 # Read dependencies from requirements.txt
-requirements = parse_requirements('requirements.txt')
+with open('requirements.txt', 'r') as file:
+    requirements = [line.strip() for line in file if line.strip() and not line.startswith('#')]
 
 setup(
     name="hobj",
