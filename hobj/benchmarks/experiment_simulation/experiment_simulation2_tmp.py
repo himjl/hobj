@@ -17,8 +17,7 @@ class ExperimentSimulation(object):
     ntrials = None
     environment_name_dim = 'environment'
 
-    def __init__(self, cachedir=config.simulation_cachedir):
-        self.cachedir = cachedir
+    def __init__(self):
         return
 
     @property
@@ -31,12 +30,8 @@ class ExperimentSimulation(object):
         raise NotImplementedError
         return [env.Environment()]
 
-    def run(self, learner: lm.BinaryLearningModel, seed: Union[type(None), int], force_recompute=False, show_pbar=True):
+    def run(self, learner: lm.BinaryLearningModel, seed: Union[type(None), int], show_pbar=True):
 
-        savepath = os.path.join(self.cachedir, self.experiment_name, 'seed_' + str(seed), f'ds_{learner.learner_id}.nc')
-        if os.path.exists(savepath) and not force_recompute:
-            ds = xr.load_dataset(savepath)
-            return ds
 
         dlist = []
         RS = np.random.RandomState(seed=seed)
@@ -51,8 +46,7 @@ class ExperimentSimulation(object):
             dlist.append(ds)
 
         ds = xr.concat(dlist, dim=self.environment_name_dim, )
-        io.prepare_savepath(savepath)
-        ds.to_netcdf(savepath)
+
         return ds
 
     def postprocess_behavioral_data(self, ds: xr.Dataset, environment: env.Environment):
