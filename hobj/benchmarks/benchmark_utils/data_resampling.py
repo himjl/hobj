@@ -132,8 +132,8 @@ def get_policy_grain_splithalf_and_bootstrap_resampled_data(ds_raw, nsplits):
 
     worker_to_kn = {}
     nworkers = len(set(ds_raw.worker_id.values))
-    import hobj.data.images.imagesets as imagesets
-    ds_meta = imagesets.MutatorHighVarImageset().ds_meta
+    import hobj.data.images.depr_imagesets as imagesets
+    ds_meta = imagesets.MutatorHighVarDeprImageset().ds_meta
 
     for worker_id, ws in tqdm(ds_raw.groupby('worker_id'), total=nworkers):
 

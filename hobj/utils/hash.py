@@ -30,3 +30,13 @@ def hash_image(image: PIL.Image) -> str:
 
     # Return the hexadecimal representation of the hash
     return sha256_hash.hexdigest()
+
+
+def hash_string(input_string: str) -> str:
+    sha256_hash = hashlib.sha256()
+
+    # Convert string to bytes
+    sha256_hash.update(input_string.encode('utf-8'))
+
+    # Return the hexadecimal representation of the hash
+    return sha256_hash.hexdigest()

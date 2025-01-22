@@ -19,8 +19,8 @@ class MutatorHighVarDataset(template.SR_Dataset):
         ds_flat = ds_flat[['perf', 'reaction_time_msec']]
 
         # Assign subtask names
-        import hobj.data.images.imagesets as imagesets
-        ds_meta = imagesets.MutatorHighVarImageset().ds_meta
+        import hobj.data.images.depr_imagesets as imagesets
+        ds_meta = imagesets.MutatorHighVarDeprImageset().ds_meta
         urls = ds_flat.stimulus_url.transpose('session', 'trial').values
         url_to_obj = {url: obj for url, obj in zip(ds_meta.image_url.values, ds_meta.obj.values)}
         sseq = []
@@ -104,8 +104,8 @@ class MutatorOneShotGeneralizationDataset(template.SR_Dataset):
     def apply_experiment_specific_filtering(self, ds_flat):
 
         import numpy as np
-        import hobj.data.images.imagesets as imagesets
-        ds_meta = imagesets.MutatorOneshotImageset().ds_meta
+        import hobj.data.images.depr_imagesets as imagesets
+        ds_meta = imagesets.MutatorOneshotDeprImageset().ds_meta
         image_url_to_transformation = {url:trans for url, trans in zip(ds_meta.image_url.values, ds_meta.transformation.values)}
         image_url_to_transformation_level = {url:trans_level for url, trans_level in zip(ds_meta.image_url.values, ds_meta.transformation_level.values)}
 

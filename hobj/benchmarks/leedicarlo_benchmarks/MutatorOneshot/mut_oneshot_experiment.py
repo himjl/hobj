@@ -6,7 +6,7 @@ import numpy as np
 
 import hobj.benchmarks.experiment_simulation.environment_depr as env_template
 from hobj.benchmarks.experiment_simulation.experiment_simulation2_tmp import ExperimentSimulation
-import hobj.data.images.imagesets as imagesets
+import hobj.data.images.depr_imagesets as imagesets
 
 _loc = os.path.dirname(__file__)
 
@@ -111,7 +111,7 @@ class OneshotTestEnvironment(env_template.Environment):
 class MutatorOneShotExperiment(ExperimentSimulation):
     nreps = 500  # per subtask (n=32)
     ntrials = 20
-    imageset = imagesets.MutatorOneshotImageset()
+    imageset = imagesets.MutatorOneshotDeprImageset()
     environment_name_dim = 'subtask'
 
     @property
@@ -247,7 +247,7 @@ class MutatorOneShotExperiment(ExperimentSimulation):
 
         # Replicate the same kinds of trials done in humans
         if not hasattr(self, '_environments'):
-            ds_meta = imagesets.MutatorOneshotImageset().ds_meta
+            ds_meta = imagesets.MutatorOneshotDeprImageset().ds_meta
 
             obj_to_support_url = {}
             obj_to_test_urls = {}

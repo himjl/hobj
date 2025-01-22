@@ -5,7 +5,7 @@ import numpy as np
 from tqdm import trange
 
 import hobj.learning_models.learning_model as lm
-import hobj.data.images.imagesets as imagesets
+import hobj.data.images.depr_imagesets as imagesets
 import hobj.benchmarks.leedicarlo_benchmarks.MutatorOneshot.mut_oneshot_experiment as mutator
 
 
@@ -27,7 +27,7 @@ class MutatorOneshotBenchmark:
         self.ds_raw = self.dataset.load_ds_data()
 
         # Remove sessions with less than 100% catch performance
-        self.ds_meta = imagesets.MutatorOneshotImageset().ds_meta
+        self.ds_meta = imagesets.MutatorOneshotDeprImageset().ds_meta
         self.url_to_trans_id = {url: trans for (url, trans) in zip(self.ds_meta.image_url.values, self.ds_meta.transformation_id.values)}
         self.url_to_obj = {url: obj for (url, obj) in zip(self.ds_meta.image_url.values, self.ds_meta.obj.values)}
         self.experiment = mutator.MutatorOneShotExperiment()

@@ -9,7 +9,7 @@ import numpy as np
 import scipy.stats as ss
 import xarray as xr
 
-import hobj.data.images.imagesets as imagesets
+import hobj.data.images.depr_imagesets as imagesets
 import hobj.statistics.hypothesis_testing.approximated_null_distribution as approximated_null_distribution
 import hobj.statistics.hypothesis_testing.bootstrapped_confidence_intervals as bootstrapped_confidence_intervals
 import hobj.statistics.lapse_rate as lapse_rate_funcs
@@ -41,7 +41,7 @@ class MutatorHighVarBenchmark:
             worker_dim='worker_id'
         )
 
-        self.imageset = imagesets.MutatorHighVarImageset()
+        self.imageset = imagesets.MutatorHighVarDeprImageset()
 
         # Todo: move/load this manifest elsewhere – e.g. to imageset
         subtask_manifest = Path(os.path.dirname(__file__)) / 'MutatorHighVarSubtasks.json'
