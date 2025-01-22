@@ -36,4 +36,6 @@ To see how to view the raw behavioral data and/or score an example learning mode
 
 # Paper
 This codebase originally accompanied the 2023 paper ["How well do rudimentary plasticity rules predict adult visual object learning?"](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1011713).
-Since that point, this codebase has been refactored and streamlined, introducing breaking changes to the API. However, to see the codebase that reflects its content at the time of publication, check out the `v1` tag.
+
+
+Since then, this codebase has been refactored and streamlined, introducing breaking changes to the API. To see the codebase that reflects its contents at the time of publication, check out the `v1` tag.

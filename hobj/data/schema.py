@@ -1,5 +1,3 @@
-from typing import Literal, List
-
 import PIL.Image
 import pydantic
 

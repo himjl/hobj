@@ -1,29 +1,24 @@
+import json
+import os
+import warnings
+from dataclasses import dataclass
+from pathlib import Path
+from typing import List
+
 import numpy as np
+import scipy.stats as ss
 import xarray as xr
 
-from hobj.data.behavior import human_data as human_data
-from hobj.learning_models import learning_model as lm
-from hobj.utils import stats as stats
-
+import hobj.data.images.imagesets as imagesets
+import hobj.statistics.hypothesis_testing.approximated_null_distribution as approximated_null_distribution
+import hobj.statistics.hypothesis_testing.bootstrapped_confidence_intervals as bootstrapped_confidence_intervals
 import hobj.statistics.lapse_rate as lapse_rate_funcs
-from hobj.statistics.resamplers.resamplers import LearningCurveResampler, WorkerResampler
 import hobj.statistics.score_statistics.MSEn as R2n_funcs
 import hobj.statistics.variance_estimates.binomial as binomial_funcs
-import hobj.statistics.hypothesis_testing.bootstrapped_confidence_intervals as bootstrapped_confidence_intervals
-import hobj.statistics.hypothesis_testing.approximated_null_distribution as approximated_null_distribution
-
-from dataclasses import dataclass
-from typing import List
-import warnings
-
-import scipy.stats as ss
-
-import hobj.data.images.imagesets as imagesets
-from pathlib import Path
-
-import os
-
-import json
+from hobj.data.behavior import human_data as human_data
+from hobj.learning_models import learning_model as lm
+from hobj.statistics.resamplers.resamplers import LearningCurveResampler, WorkerResampler
+from hobj.utils import stats as stats
 
 
 class MutatorHighVarBenchmark:
