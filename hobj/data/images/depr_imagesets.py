@@ -31,9 +31,6 @@ class DeprImageset(object):
 
 
 # %%
-class WarmupDeprImageset(DeprImageset):
-    meta_path = os.path.join(image_meta_loc, 'ds_MutatorB0_BurnIn.nc')
-
 
 class MutatorHighVarDeprImageset(DeprImageset):
     meta_path = os.path.join(image_meta_loc, 'ds_MutatorB2000_Subset128_FullVar_Train.nc')
@@ -53,4 +50,4 @@ class MutatorOneshotDeprImageset(DeprImageset):
 
 # %%
 if __name__ == '__main__':
-    x = WarmupDeprImageset()
+    x = MutatorHighVarDeprImageset()

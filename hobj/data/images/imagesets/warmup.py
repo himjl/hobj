@@ -1,9 +1,6 @@
 from hobj.data.images.template import Imageset, ImageManifestEntry, ImageManifest
 import pydantic
 
-from typing import Literal
-from hobj.utils.hash import hash_image
-
 
 class WarmupAnnotation(pydantic.BaseModel):
     category: str = pydantic.Field(
