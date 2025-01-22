@@ -1,9 +1,7 @@
-from typing import Union
-
 import numpy as np
 import xarray as xr
 
-from hobj.behavioral_data import human_data as human_data
+from hobj.data.behavioral_data import human_data as human_data
 from hobj.learning_models import learning_model as lm
 from hobj.utils import stats as stats
 
@@ -26,9 +24,6 @@ from pathlib import Path
 import os
 
 import json
-import pydantic
-
-from hobj.benchmarks.experiment_simulation.task import SimpleBinaryTask
 
 
 class MutatorHighVarBenchmark:

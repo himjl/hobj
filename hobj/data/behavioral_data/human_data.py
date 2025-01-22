@@ -1,5 +1,5 @@
 import xarray as xr
-import hobj.behavioral_data.template.sr_data as template
+import hobj.data.behavioral_data.template.sr_data as template
 import os
 import numpy as np
 import collections
