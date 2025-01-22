@@ -1,8 +1,9 @@
-from hobj.data.images.template import Imageset, ImageManifestEntry, ImageManifest
 import pydantic
 
+from hobj.data.images.template import Imageset
 
-class WarmupAnnotation(pydantic.BaseModel):
+
+class MutatorWarmupAnnotation(pydantic.BaseModel):
     category: str = pydantic.Field(
         examples=[
             'Mutator19',
@@ -12,12 +13,12 @@ class WarmupAnnotation(pydantic.BaseModel):
     )
 
 
-class WarmupImageset(Imageset[WarmupAnnotation]):
+class MutatorWarmupImageset(Imageset[MutatorWarmupAnnotation]):
     manifest_url = 'https://hlbdatasets.s3.us-east-1.amazonaws.com/imagesets/mutator-warmup/mutator-warmup-manifest.json'
     zipped_images_url = 'https://hlbdatasets.s3.us-east-1.amazonaws.com/imagesets/mutator-warmup/MutatorWarmup.zip'
-    annotation_schema = WarmupAnnotation
+    annotation_schema = MutatorWarmupAnnotation
 
 
 if __name__ == '__main__':
 
-    imageset = WarmupImageset(redownload=True)
+    imageset = MutatorWarmupImageset(redownload=True)
