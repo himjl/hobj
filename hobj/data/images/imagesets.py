@@ -1,7 +1,7 @@
 import hobj.config as config
 import os
 import xarray as xr
-import hobj.images.load_image as load_image
+import hobj.data.images.load_image as load_image
 import PIL.Image
 
 image_meta_loc = os.path.join(os.path.dirname(__file__), 'image_meta')
@@ -49,3 +49,6 @@ class MutatorOneshotImageset(Imageset):
             self._ds_meta = ds_meta
 
         return self._ds_meta
+
+if __name__ == '__main__':
+    x = WarmupImageset()
