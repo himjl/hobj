@@ -9,25 +9,26 @@ import numpy as np
 import scipy.stats as ss
 import xarray as xr
 
-import hobj.data.images.depr_imagesets as imagesets
 import hobj.statistics.hypothesis_testing.approximated_null_distribution as approximated_null_distribution
 import hobj.statistics.hypothesis_testing.bootstrapped_confidence_intervals as bootstrapped_confidence_intervals
 import hobj.statistics.lapse_rate as lapse_rate_funcs
 import hobj.statistics.score_statistics.MSEn as R2n_funcs
 import hobj.statistics.variance_estimates.binomial as binomial_funcs
-from hobj.data.behavior import human_data as human_data
+from hobj.data.depr_behavior import human_data as human_data
 from hobj.learning_models import learning_model as lm
 from hobj.statistics.resamplers.resamplers import LearningCurveResampler, WorkerResampler
 from hobj.utils import stats as stats
 
+from hobj.data.images import MutatorHighVarImageset
+from hobj.benchmarks.experiment_simulation.task import SimpleBinaryTask
 
 class MutatorHighVarBenchmark:
+    nboot = 1000
+    tearly = slice(1, 6)
+    tlate = slice(94, 100)
 
     def __init__(self):
 
-        self.nboot = 1000
-        self.tearly = slice(1, 6)
-        self.tlate = slice(94, 100)
         self.dataset = human_data.MutatorHighVarDataset()
         self.resampler = LearningCurveResampler(
             ds=self.ds_worker_table,
@@ -40,8 +41,6 @@ class MutatorHighVarBenchmark:
             condition_dim='subtask',
             worker_dim='worker_id'
         )
-
-        self.imageset = imagesets.MutatorHighVarDeprImageset()
 
         # Todo: move/load this manifest elsewhere – e.g. to imageset
         subtask_manifest = Path(os.path.dirname(__file__)) / 'MutatorHighVarSubtasks.json'

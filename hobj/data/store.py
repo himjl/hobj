@@ -8,7 +8,7 @@ from hobj.utils.file_io import download_json, download_file
 import json
 import tempfile
 
-__all__ = ['DataStore']
+__all__ = ['DataStore', 'default_data_store']
 
 
 # %%

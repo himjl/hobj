@@ -65,18 +65,18 @@ class Imageset(Generic[IA], ABC):
         self._manifest = image_manifest
 
         self._image_id_to_annotation: Dict[str, IA] = {}
-        self._image_id_to_image_ref: Dict[str, ImageRef] = {}
-        self._image_ref_to_image_ids: Dict[ImageRef, List[str]] = {}
+        self._image_id_to_sha256: Dict[str, str] = {}
+        self._sha256_to_image_ids: Dict[str, List[str]] = {}
         self._image_refs: List[ImageRef] = []
 
         for image_id, entry in image_manifest.entries.items():
             image_ref = ImageRef(sha256=entry.sha256)
             self._image_refs.append(image_ref)
-            self._image_id_to_image_ref[image_id] = image_ref
+            self._image_id_to_sha256[image_id] = image_ref.sha256
             self._image_id_to_annotation[image_id] = self.annotation_schema(**entry.annotation)
-            if image_ref not in self._image_ref_to_image_ids:
-                self._image_ref_to_image_ids[image_ref] = []
-            self._image_ref_to_image_ids[image_ref].append(image_id)
+            if image_ref.sha256 not in self._sha256_to_image_ids:
+                self._sha256_to_image_ids[image_ref.sha256] = []
+            self._sha256_to_image_ids[image_ref.sha256].append(image_id)
 
     def _register_image_urls(self, manifest: ImageManifest, redownload:bool = False):
         """
@@ -124,16 +124,14 @@ class Imageset(Generic[IA], ABC):
         """
         return self._image_refs
 
-    def get_annotation(self, image_id: str = None, image_ref: ImageRef = None) -> IA:
+    def get_annotation(self, *, sha256: str) -> IA:
         """
         Get the annotation for a given image. If an image has multiple annotations, this will throw an error.
         """
-        if image_id is None:
-            image_ids = self._image_ref_to_image_ids[image_ref]
-            if len(image_ids) > 1:
-                warnings.warn(f"Image {image_ref} has multiple annotations: {image_ids}. Returning the first one.")
-            image_id = image_ids[0]
-
+        image_ids = self._sha256_to_image_ids[sha256]
+        if len(image_ids) > 1:
+            warnings.warn(f"Image {sha256} has multiple annotations: {image_ids}. Returning the first one.")
+        image_id = image_ids[0]
         entry = self._image_id_to_annotation[image_id]
         return entry
 
