@@ -1,6 +1,9 @@
 from pathlib import Path
+from dataclasses import dataclass
 
-hlb_cachedir = Path.home() / 'hlb_cache'
+@dataclass
+class Config:
+    cachedir = Path.home() / 'hobj_cache'
 
 if not hlb_cachedir.exists():
     hlb_cachedir.mkdir()
