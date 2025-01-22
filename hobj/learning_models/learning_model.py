@@ -1,18 +1,13 @@
 from abc import ABC, abstractmethod
 
 
-class LearningModel(object):
+class LearningModel(ABC):
     """
-    This class is meant to be subclassed. As long as the functions below are implemented (and returns the correct dtype),
+    This abstract class (meant to be subclassed) is.
+
+    As long as the functions below are implemented (and returns the correct dtype),
     the LearningModel can be scored on any benchmark in this repo.
     """
-
-    def __init__(self, learner_id: str):
-        """
-        :param learner_id:  a string that identifies the learning model.
-        """
-        self.learner_id = learner_id
-        return
 
     def reset(self) -> None:
         """
