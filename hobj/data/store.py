@@ -5,9 +5,7 @@ from typing import List, Iterator
 
 import PIL.Image
 
-import geo.data.schema as schema
-import geo.utils as utils
-from geo.config import Config, default_config
+from hobj.config import Config, default_config
 
 __all__ = ['DataStore', 'default_data_store']
 
