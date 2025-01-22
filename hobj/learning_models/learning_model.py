@@ -1,3 +1,6 @@
+from abc import ABC, abstractmethod
+
+
 class LearningModel(object):
     """
     This class is meant to be subclassed. As long as the functions below are implemented (and returns the correct dtype),

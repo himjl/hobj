@@ -5,7 +5,7 @@ import xarray as xr
 import numpy as np
 
 import hobj.benchmarks.experiment_simulation.environment as env_template
-from hobj.benchmarks.experiment_simulation.experiment_simulation import ExperimentSimulation
+from hobj.benchmarks.experiment_simulation.experiment_simulation2_tmp import ExperimentSimulation
 import hobj.images.imagesets as imagesets
 
 _loc = os.path.dirname(__file__)

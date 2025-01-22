@@ -1,6 +1,7 @@
 from scipy.stats import beta
 import numpy as np
 import xarray as xr
+from typing import Union
 
 
 def estimate_variance_of_binomial_proportion(kvec, nvec):

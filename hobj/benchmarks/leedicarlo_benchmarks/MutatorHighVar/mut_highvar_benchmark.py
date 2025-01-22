@@ -6,7 +6,6 @@ import xarray as xr
 from hobj.behavioral_data import human_data as human_data
 from hobj.learning_models import learning_model as lm
 from hobj.utils import stats as stats
-import hobj.benchmarks.leedicarlo_benchmarks.MutatorHighVar.mut_highvar_experiment as mutator
 
 import hobj.statistics.lapse_rate as lapse_rate_funcs
 from hobj.statistics.resamplers.resamplers import LearningCurveResampler, WorkerResampler
@@ -15,16 +14,29 @@ import hobj.statistics.variance_estimates.binomial as binomial_funcs
 import hobj.statistics.hypothesis_testing.bootstrapped_confidence_intervals as bootstrapped_confidence_intervals
 import hobj.statistics.hypothesis_testing.approximated_null_distribution as approximated_null_distribution
 
+from dataclasses import dataclass
+from typing import List
+import warnings
+
+import scipy.stats as ss
+
+import hobj.images.imagesets as imagesets
+from pathlib import Path
+
+import os
+
+import json
+import pydantic
+
 
 class MutatorHighVarBenchmark:
 
     def __init__(self):
-        super().__init__()
+
         self.nboot = 1000
         self.tearly = slice(1, 6)
         self.tlate = slice(94, 100)
         self.dataset = human_data.MutatorHighVarDataset()
-        self.experiment = mutator.MutatorHighVarExperiment()
         self.resampler = LearningCurveResampler(
             ds=self.ds_worker_table,
             condition_dim='subtask',
@@ -37,40 +49,114 @@ class MutatorHighVarBenchmark:
             worker_dim='worker_id'
         )
 
-    def evaluate_model(self, learner: lm.LearningModel, force_recompute: bool = False, seed = None) -> xr.Dataset:
+        self.imageset = imagesets.MutatorHighVarImageset()
+
+
+        # Todo: move/load this manifest elsewhere – e.g. to imageset
+        subtask_manifest = Path(os.path.dirname(__file__)) / 'MutatorHighVarSubtasks.json'
+        subtask_manifest = json.loads(subtask_manifest.read_text())
+        self.subtask_manifest = subtask_manifest
+
+
+    @dataclass
+    class SimulateExperimentResult:
+        """
+        The result of simulating an experiment on this battery of experiments.
+        """
+        subtasks: List[str]
+        k: np.ndarray  # [trial, subtask]
+        n: np.ndarray  # [trial, subtask]
+
+    def _simulate_experiment(self, learner: lm.LearningModel, seed: int) -> SimulateExperimentResult:
+        # Todo
+        nreps = 500
+        ntrials = 100
+        warnings.warn("Returning dummy results.")
+        RS = np.random.RandomState(0)
+
+        return self.SimulateExperimentResult(
+            subtasks=[],
+            k=RS.randint(low=0, high=n, size=(64, 100)),
+            n=np.ones((64, 100)) * n
+        )
+
+    @dataclass
+    class EvaluateModelResult:
+        mse_n: float
+        subtask_vector_spearmanr: float
+        perf_early: float
+        perf_late: float
+
+        subtasks: List[str]
+        model_phat: np.ndarray  # [trial, subtask]
+        model_varhat_phat: np.ndarray  # [trial, subtask]
+        model_lapse_rate: float
+
+        human_phat: np.ndarray  # [trial, subtask]
+        human_varhat_phat: np.ndarray  # [trial, subtask]
+
+    def evaluate_model(self, learner: lm.LearningModel, seed: int = 0) -> EvaluateModelResult:
         """
         :param learner: LearningModel
         :param force_recompute: bool. If True, recompute the model behavior, even if it is already cached.
         :return:
         """
 
-        # Get behavior of this model
-        ds_behavior = self.experiment.run(learner=learner, seed=seed, force_recompute=force_recompute)
+        # Simulate the behavior of this model
+        model_behavior = self._simulate_experiment(learner=learner, seed=seed)
+        k = model_behavior.k
+        n = model_behavior.n
 
-        k = ds_behavior.k.isel(stimulus_category=1) + (ds_behavior.n.isel(stimulus_category=0) - ds_behavior.k.isel(stimulus_category=0))
-        n = ds_behavior.n.isel(stimulus_category=1) + ds_behavior.n.isel(stimulus_category=0)
-
-        # Fit optimal lapse rate
+        # Fit a lapse rate which minimizes the MSE between the model and human data
         lapse_rate = lapse_rate_funcs.fit_optimal_lapse_rate(
-            phat=k / n,
-            p=(self.ds_behavioral_statistics.perf),
+            phat=model_behavior.k / model_behavior.n,
+            p=self.ds_behavioral_statistics.perf.values,
             nway=2,
-            condition_dims=('subtask', 'trial')
         )
 
-        # Compute scores
+        # Load human data
         target_point = self.ds_worker_table.sum('worker_id')
-        ds_scores = self.score_predictions(
-            k=k,
-            n=n,
-            ktarget=target_point.k,
-            ntarget=target_point.n,
-            lapse_rate=lapse_rate,
-        ).assign_coords(
-            lapse_rate=lapse_rate
-        )
+        ktarget = target_point.k.values
+        ntarget = target_point.n.values
+        phat_target = ktarget / ntarget
+        varhat_phat_target = binomial_funcs.estimate_variance_of_binomial_proportion(kvec=ktarget, nvec=ntarget)
 
-        return ds_scores
+        # Get estimates of performance
+        phat_model = k / n
+        varhat_phat_model = binomial_funcs.estimate_variance_of_binomial_proportion(kvec=k, nvec=n)
+
+        # Get MSEn point estimate on the lapse-rate corrected predictions
+        phat_model_lapsed = phat_model * (1 - lapse_rate) + 0.5 * lapse_rate
+        varhat_phat_model_lapsed = varhat_phat_model * (1 - lapse_rate) ** 2
+
+        msen_elementwise = np.square(phat_target - phat_model_lapsed) - varhat_phat_model_lapsed
+        MSEn_point = msen_elementwise.mean()
+
+        # Get SpearmanR between the subtask difficulty patterns
+        predicted_subtask_vector = phat_model.mean(1)  # [subtask]
+        actual_subtask_vector = phat_target.mean(1)  # [subtask]
+
+        SpearmanR_point = ss.spearmanr(predicted_subtask_vector, actual_subtask_vector).correlation
+
+        # %% Get the (g)rand (l)earning (c)urve: the average over all subtasks, and the confidence intervals
+        glc = phat_model.mean(0)  # [trial]
+        glc_lapsed = glc * (1 - lapse_rate) + 0.5 * lapse_rate
+        overall_perf = glc_lapsed.mean()  # Prediction of lapse-rate adjusted model
+
+        # %% Get early and late performances
+        perf_early = glc[self.tearly].mean()
+        perf_late = glc[self.tlate].mean()
+
+        return self.EvaluateModelResult(
+            mse_n = MSEn_point,
+            subtask_vector_spearmanr = SpearmanR_point,
+            subtasks = subtasks,
+            model_phat = phat_model,
+            model_varhat_phat = varhat_phat_model,
+            model_lapse_rate = lapse_rate,
+            human_phat = phat_target,
+            human_varhat_phat = varhat_phat_target
+        )
 
     @property
     def ds_ceilings(self):
@@ -90,8 +176,8 @@ class MutatorHighVarBenchmark:
             # %% Get point estimate of R2 ceiling, and confidence intervals
             point = self.ds_worker_table.sum('worker_id')
             ds_ceilings['MSEn'] = binomial_funcs.estimate_variance_of_binomial_proportion(
-                kvec = point.k,
-                nvec = point.n
+                kvec=point.k,
+                nvec=point.n
             ).mean(['subtask', 'trial'])
 
             # Approximate the null distribution of R2n,
@@ -168,106 +254,6 @@ class MutatorHighVarBenchmark:
 
         return self._ds_ceilings
 
-    def score_predictions(
-            self,
-            k: xr.DataArray,
-            n: xr.DataArray,
-            ktarget: xr.DataArray,
-            ntarget: xr.DataArray,
-            lapse_rate: Union[float, int, xr.DataArray] = 0.,
-    ):
-
-        """
-        k: (subtask, trial). The number of correct classifications in that condition.
-        n: (subtask, trial). The number of trials for each condition.
-        ktarget: (subtask, trial). The number of correct classifications in that condition, for the system aiming to be modeled.
-        ntarget: (subtask, trial). The number of trials for each condition, for the system aiming to be modeled
-        lapse_rate: a scalar. Adjusts the predictions of the model by simulating a random guess rate. Can only drive the behavior of the model to randomness.
-
-        returns ds_scores, which contains:
-
-            Point estimates, 95% CIs, and standard errors of:
-                R2n: () the noise-corrected R^2 score
-                glc: (trial) (g)rand (l)earning (c)urve over all subtasks
-                overall_perf_raw: () the average performance over all subtasks and trials (before lapse rate correction)
-                overall_perf: () the average performance over all subtasks and trials  (after lapse rate correction)
-                SpearmanR: () between subtask difficulty vectors
-        """
-
-        assert np.all(lapse_rate >= 0) and np.all(lapse_rate <= 1), lapse_rate
-
-        def check_kn(k, n):
-            assert isinstance(k, xr.DataArray)
-            assert isinstance(n, xr.DataArray)
-            assert np.all(k <= n)
-            assert np.all(n > 0)
-            assert 'worker_id' not in k.dims
-            assert 'subtask' in k.dims
-            assert 'trial' in k.dims
-
-            # assert set(k.dims) == {'subtask', 'trial'}, (k.dims)
-
-            assert set(k.dims) == set(n.dims), (k.dims, n.dims)
-
-        check_kn(k, n)
-        check_kn(ktarget, ntarget)
-
-        alpha = 0.05
-        # Get estimates of performance
-        hat_prob = k / n
-        hat_var_hat_prob = binomial_funcs.estimate_variance_of_binomial_proportion(kvec=k, nvec=n)
-
-        # %% Get MSEn point estimate on the lapse-rate corrected predictions
-        hat_prob_lapse_rate = hat_prob * (1 - lapse_rate) + 0.5 * (lapse_rate)
-        hat_var_hat_prob_lapse_rate = hat_var_hat_prob * (1 - lapse_rate) ** 2
-
-        hat_prob_target = ktarget / ntarget
-
-        MSEn_point = R2n_funcs.estimate_MSEn(
-            hat_theta_model=hat_prob_lapse_rate,
-            hat_var_hat_theta_model=hat_var_hat_prob_lapse_rate,
-            hat_theta_target=hat_prob_target,
-            condition_dims=('subtask', 'trial'),
-        )
-
-
-        # %% Get SpearmanR between the subtask difficulty patterns
-        predicted_subtask_vector = hat_prob.mean("trial")
-        actual_subtask_vector = hat_prob_target.mean('trial')
-
-        SpearmanR_point = stats.calc_correlation(
-            obs_dim='subtask',
-            y_pred=predicted_subtask_vector,
-            y_actual=actual_subtask_vector,
-            spearman=True
-        )
-
-        # %% Get the (g)rand (l)earning (c)urve: the average over all subtasks, and the confidence intervals
-        glc = hat_prob.mean('subtask')
-        glc_lapsed = glc * (1 - lapse_rate) + 0.5 * (lapse_rate)
-        overall_perf = glc_lapsed.mean('trial')  # Prediction of lapse-rate adjusted model
-
-        # %% Get early and late performances
-        perf_early = glc.isel(trial=self.tearly).mean('trial')
-        perf_late = glc.isel(trial=self.tlate).mean('trial')
-
-        # %% Assemble scores
-        ds_scores = xr.Dataset(
-            data_vars=dict(
-                overall_perf=overall_perf,
-                overall_perf_raw=glc.mean('trial'),
-                SpearmanR=SpearmanR_point,
-                MSEn=MSEn_point,
-                glc=glc,
-                early_perf=perf_early,
-                late_perf=perf_late,
-            ),
-            coords = dict(
-                model_var_correction_term = float(hat_var_hat_prob_lapse_rate.mean())
-            )
-        )
-
-        return ds_scores
 
     @property
     def ds_worker_table(self):
@@ -346,4 +332,3 @@ class MutatorHighVarBenchmark:
             self._ds_boot = self.resampler.get_ds_boot(nboot=self.nboot, seed=0)
 
         return self._ds_boot
-

@@ -3,15 +3,16 @@ import hobj.benchmarks.leedicarlo_benchmarks.MutatorHighVar.mut_highvar_benchmar
 import hobj.benchmarks.leedicarlo_benchmarks.MutatorOneshot.mut_oneshot_benchmark as oneshot_benchmark
 
 dummy_model = lm.LearningModel(learner_id='dummylearner')
-benchmarks = [
-    highvar_benchmark.MutatorHighVarBenchmark(),
-    oneshot_benchmark.MutatorOneshotBenchmark()
-]
 
-force_recompute = False
-for benchmark in benchmarks:
-    result = benchmark.evaluate_model(
-        learner=dummy_model,
-        force_recompute=force_recompute
-    )
-    print(result)
+hv = highvar_benchmark.MutatorHighVarBenchmark()
+raise
+os = oneshot_benchmark.MutatorOneshotBenchmark()
+
+result = hv.evaluate_model(
+    learner=dummy_model,
+)
+print(result)
+
+result2 = os.evaluate_model(
+    learner=dummy_model,
+)
