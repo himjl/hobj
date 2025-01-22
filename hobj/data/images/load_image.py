@@ -5,6 +5,7 @@ import PIL.Image
 import hobj.utils.file_io as io
 import hobj.config as config
 
+
 def get_image_location(image_url: str, cachedir=config.image_cachedir):
     """
     Return the location of the image at the specified image_url on disk. If it is not present on disk yet, download it.

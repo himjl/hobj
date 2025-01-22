@@ -5,7 +5,7 @@ import numpy as np
 from tqdm import trange
 
 import hobj.learning_models.learning_model as lm
-import hobj.images.imagesets as imagesets
+import hobj.data.images.imagesets as imagesets
 import hobj.benchmarks.leedicarlo_benchmarks.MutatorOneshot.mut_oneshot_experiment as mutator
 
 

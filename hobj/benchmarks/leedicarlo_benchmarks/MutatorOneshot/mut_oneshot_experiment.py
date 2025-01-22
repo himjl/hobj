@@ -4,9 +4,9 @@ from typing import List
 import xarray as xr
 import numpy as np
 
-import hobj.benchmarks.experiment_simulation.environment as env_template
+import hobj.benchmarks.experiment_simulation.environment_depr as env_template
 from hobj.benchmarks.experiment_simulation.experiment_simulation2_tmp import ExperimentSimulation
-import hobj.images.imagesets as imagesets
+import hobj.data.images.imagesets as imagesets
 
 _loc = os.path.dirname(__file__)
 

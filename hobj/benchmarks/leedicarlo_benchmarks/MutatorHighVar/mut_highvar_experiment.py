@@ -3,12 +3,12 @@ import os
 import xarray as xr
 import numpy as np
 
-import hobj.benchmarks.experiment_simulation.environment as env_template
+import hobj.benchmarks.experiment_simulation.environment_depr as env_template
 import hobj.utils.file_io as io
-import hobj.images.imagesets as imagesets
+import hobj.data.images.imagesets as imagesets
 import hobj.config as config
 import hobj.learning_models.learning_model as lm
-import hobj.benchmarks.experiment_simulation.environment as env
+import hobj.benchmarks.experiment_simulation.environment_depr as env
 import hobj.utils.file_io as io
 import os
 import xarray as xr

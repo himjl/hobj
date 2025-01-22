@@ -21,3 +21,6 @@ class ImageRef(pydantic.BaseModel):
 
     def get_image_data(self) -> PIL.Image:
         raise NotImplementedError
+
+    def __hash__(self):
+        return hash(self.sha256)

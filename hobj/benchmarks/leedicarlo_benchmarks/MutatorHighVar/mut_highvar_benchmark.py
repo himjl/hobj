@@ -20,13 +20,15 @@ import warnings
 
 import scipy.stats as ss
 
-import hobj.images.imagesets as imagesets
+import hobj.data.images.imagesets as imagesets
 from pathlib import Path
 
 import os
 
 import json
 import pydantic
+
+from hobj.benchmarks.experiment_simulation.task import SimpleBinaryTask
 
 
 class MutatorHighVarBenchmark:
@@ -51,12 +53,10 @@ class MutatorHighVarBenchmark:
 
         self.imageset = imagesets.MutatorHighVarImageset()
 
-
         # Todo: move/load this manifest elsewhere – e.g. to imageset
         subtask_manifest = Path(os.path.dirname(__file__)) / 'MutatorHighVarSubtasks.json'
         subtask_manifest = json.loads(subtask_manifest.read_text())
         self.subtask_manifest = subtask_manifest
-
 
     @dataclass
     class SimulateExperimentResult:
@@ -148,14 +148,14 @@ class MutatorHighVarBenchmark:
         perf_late = glc[self.tlate].mean()
 
         return self.EvaluateModelResult(
-            mse_n = MSEn_point,
-            subtask_vector_spearmanr = SpearmanR_point,
-            subtasks = subtasks,
-            model_phat = phat_model,
-            model_varhat_phat = varhat_phat_model,
-            model_lapse_rate = lapse_rate,
-            human_phat = phat_target,
-            human_varhat_phat = varhat_phat_target
+            mse_n=MSEn_point,
+            subtask_vector_spearmanr=SpearmanR_point,
+            subtasks=subtasks,
+            model_phat=phat_model,
+            model_varhat_phat=varhat_phat_model,
+            model_lapse_rate=lapse_rate,
+            human_phat=phat_target,
+            human_varhat_phat=varhat_phat_target
         )
 
     @property
@@ -253,7 +253,6 @@ class MutatorHighVarBenchmark:
             self._ds_ceilings = ds_ceilings
 
         return self._ds_ceilings
-
 
     @property
     def ds_worker_table(self):
