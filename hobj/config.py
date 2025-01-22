@@ -1,8 +1,7 @@
-import os
+from pathlib import Path
 
-hlb_cachedir = os.path.join(os.path.expanduser('~'), 'hlb_cache')
+hlb_cachedir = Path.home() / 'hlb_cache'
 
-image_cachedir = os.path.join(hlb_cachedir, 'images')
-behavior_cachedir = os.path.join(hlb_cachedir, 'behavior')
-
+if not hlb_cachedir.exists():
+    hlb_cachedir.mkdir()
 
