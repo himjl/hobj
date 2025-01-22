@@ -11,6 +11,7 @@ from hobj.utils.file_io import unzip_file
 from hobj.utils.hash import hash_image
 from hobj.data.schema import ImageRef
 from hobj.data.store import DataStore, default_data_store
+import warnings
 
 
 class ImageManifestEntry(pydantic.BaseModel, ABC):
@@ -24,12 +25,8 @@ class ImageManifestEntry(pydantic.BaseModel, ABC):
 
 
 class ImageManifest(pydantic.BaseModel):
-    entries: List[ImageManifestEntry] = pydantic.Field(
-        description='A list of image manifest entries.'
-    )
-
-    zipped_images_url: str = pydantic.Field(
-        description='The URL to the zipped imageset file.'
+    entries: Dict[str, ImageManifestEntry] = pydantic.Field(
+        description='A mapping from a unique image ID to image manifest entries.'
     )
 
 
@@ -45,12 +42,13 @@ class Imageset(Generic[IA], ABC):
     """
 
     manifest_url: str
+    zipped_images_url: str
     annotation_schema: IA
 
     def __init__(
             self,
             data_store: DataStore = None,
-            redownload_manifest=False,
+            redownload=False,
     ):
         """
         Unwrap the image manifest and save the images to the cache.
@@ -60,30 +58,33 @@ class Imageset(Generic[IA], ABC):
             self.data_store: DataStore = default_data_store
 
         # Load the manifest if it is already cached
-        manifest_data = self.data_store.get_json_data_from_url(url=self.manifest_url, redownload=redownload_manifest)
+        manifest_data = self.data_store.get_json_data_from_url(url=self.manifest_url, redownload=redownload)
         image_manifest = ImageManifest(**manifest_data)
 
-        self._register_image_urls(manifest=image_manifest)
+        self._register_image_urls(manifest=image_manifest, redownload=redownload)
         self._manifest = image_manifest
 
-        self._image_ref_to_annotation: Dict[ImageRef, IA] = {}
+        self._image_id_to_annotation: Dict[str, IA] = {}
+        self._image_id_to_image_ref: Dict[str, ImageRef] = {}
+        self._image_ref_to_image_ids: Dict[ImageRef, List[str]] = {}
         self._image_refs: List[ImageRef] = []
 
-        for entry in image_manifest.entries:
+        for image_id, entry in image_manifest.entries.items():
             image_ref = ImageRef(sha256=entry.sha256)
             self._image_refs.append(image_ref)
-            if image_ref in self._image_ref_to_annotation:
-                raise ValueError(f"Multiple annotations for image {image_ref}: \n{entry.annotation} \n{self._image_ref_to_annotation[image_ref]}")
-            self._image_ref_to_annotation[image_ref] = self.annotation_schema(**entry.annotation)
+            self._image_id_to_image_ref[image_id] = image_ref
+            self._image_id_to_annotation[image_id] = self.annotation_schema(**entry.annotation)
+            if image_ref not in self._image_ref_to_image_ids:
+                self._image_ref_to_image_ids[image_ref] = []
+            self._image_ref_to_image_ids[image_ref].append(image_id)
 
-    def _register_image_urls(self, manifest: ImageManifest):
+    def _register_image_urls(self, manifest: ImageManifest, redownload:bool = False):
         """
         Ensures the entries of the manifest are registered in the data store.
         """
 
         num_undownloaded_images = 0
-        for manifest_entry in manifest.entries:
-
+        for image_id, manifest_entry in manifest.entries.items():
 
             if not self.data_store.check_image_exists(sha256=manifest_entry.sha256):
                 num_undownloaded_images += 1
@@ -94,7 +95,7 @@ class Imageset(Generic[IA], ABC):
         print(f'Missing {num_undownloaded_images}/{len(manifest.entries)} images for this imageset.')
 
         # Download the images
-        zipped_images_path = self.data_store.get_zipfile(zipfile_url=manifest.zipped_images_url)
+        zipped_images_path = self.data_store.get_zipfile(zipfile_url=self.zipped_images_url, redownload=redownload)
 
         # Make a tempdir to unzip the images
         with tempfile.TemporaryDirectory() as tempdir:
@@ -103,7 +104,7 @@ class Imageset(Generic[IA], ABC):
 
             # Register the images
             pbar = tqdm(total=len(manifest.entries))
-            for manifest_entry in manifest.entries:
+            for image_id, manifest_entry in manifest.entries.items():
                 reported_sha256 = manifest_entry.sha256
                 relpath = manifest_entry.relpath
                 image_path = tempdir / relpath
@@ -123,13 +124,18 @@ class Imageset(Generic[IA], ABC):
         """
         return self._image_refs
 
-    def get_annotation(self, image_ref: ImageRef) -> IA:
+    def get_annotation(self, image_id: str = None, image_ref: ImageRef = None) -> IA:
         """
         Get the annotation for a given image. If an image has multiple annotations, this will throw an error.
         """
+        if image_id is None:
+            image_ids = self._image_ref_to_image_ids[image_ref]
+            if len(image_ids) > 1:
+                warnings.warn(f"Image {image_ref} has multiple annotations: {image_ids}. Returning the first one.")
+            image_id = image_ids[0]
 
-        entry = self._image_ref_to_annotation[image_ref]
-        return self.annotation_schema(**entry.annotation)
+        entry = self._image_id_to_annotation[image_id]
+        return entry
 
     def __len__(self) -> int:
         return len(self.image_refs)
