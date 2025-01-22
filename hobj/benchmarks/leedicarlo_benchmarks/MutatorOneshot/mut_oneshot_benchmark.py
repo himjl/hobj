@@ -9,7 +9,7 @@ import hobj.data.images.imagesets as imagesets
 import hobj.benchmarks.leedicarlo_benchmarks.MutatorOneshot.mut_oneshot_experiment as mutator
 
 
-import hobj.data.behavioral_data.human_data as human_data
+import hobj.data.behavior.human_data as human_data
 from hobj.statistics.resamplers.resamplers import Resampler
 import hobj.statistics.score_statistics.MSEn as R2n_funcs
 import hobj.statistics.variance_estimates.binomial as binomial_funcs

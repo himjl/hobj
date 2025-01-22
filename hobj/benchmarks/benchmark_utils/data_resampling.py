@@ -223,6 +223,6 @@ def get_policy_grain_splithalf_and_bootstrap_resampled_data(ds_raw, nsplits):
 
 
 if __name__ == '__main__':
-    import hobj.data.behavioral_data.human_data as human_data
+    import hobj.data.behavior.human_data as human_data
     ds_raw = human_data.MutatorHighVarDataset().load_ds_data()
     result = get_policy_grain_splithalf_and_bootstrap_resampled_data(ds_raw = ds_raw, nsplits = 1000)
