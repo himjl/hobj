@@ -5,7 +5,7 @@ import hobj.learning_models.linear_learners.update_rules.update_rules as urs
 import numpy as np
 
 
-class LinearLearner(lm.LearningModel):
+class LinearLearner(lm.BinaryLearningModel):
     """
     A learning model based on a standard cognitive theory of learning.
     """
@@ -33,8 +33,8 @@ class LinearLearner(lm.LearningModel):
         self.b = np.zeros((self.nactions,))
         return
 
-    def respond(self, image_url: str):
-        f = self.representational_model.get_features(image_url=image_url)
+    def respond(self, image: str):
+        f = self.representational_model.get_features(image_url=image)
         self.f = f
         self.logits = self.f @ self.w + self.b # [action]
         self.action = int(_random_tiebreaking_argmax(self.logits))

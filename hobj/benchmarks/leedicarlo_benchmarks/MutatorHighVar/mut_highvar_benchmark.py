@@ -67,7 +67,7 @@ class MutatorHighVarBenchmark:
         k: np.ndarray  # [trial, subtask]
         n: np.ndarray  # [trial, subtask]
 
-    def _simulate_experiment(self, learner: lm.LearningModel, seed: int) -> SimulateExperimentResult:
+    def _simulate_experiment(self, learner: lm.BinaryLearningModel, seed: int) -> SimulateExperimentResult:
         # Todo
         nreps = 500
         ntrials = 100
@@ -95,7 +95,7 @@ class MutatorHighVarBenchmark:
         human_phat: np.ndarray  # [trial, subtask]
         human_varhat_phat: np.ndarray  # [trial, subtask]
 
-    def evaluate_model(self, learner: lm.LearningModel, seed: int = 0) -> EvaluateModelResult:
+    def evaluate_model(self, learner: lm.BinaryLearningModel, seed: int = 0) -> EvaluateModelResult:
         """
         :param learner: LearningModel
         :param force_recompute: bool. If True, recompute the model behavior, even if it is already cached.

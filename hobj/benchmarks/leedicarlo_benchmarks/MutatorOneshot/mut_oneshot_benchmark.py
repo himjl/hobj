@@ -103,7 +103,7 @@ class MutatorOneshotBenchmark:
             'MutatorB2000_2909,MutatorB2000_4256'
         ]
 
-    def evaluate_model(self, learner: lm.LearningModel, force_recompute: bool = False):
+    def evaluate_model(self, learner: lm.BinaryLearningModel, force_recompute: bool = False):
         """
         :param learner: LearningModel
         :param force_recompute: bool. If True, recompute the results even if they are already cached.

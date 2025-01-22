@@ -31,7 +31,7 @@ class ExperimentSimulation(object):
         raise NotImplementedError
         return [env.Environment()]
 
-    def run(self, learner: lm.LearningModel, seed: Union[type(None), int], force_recompute=False, show_pbar=True):
+    def run(self, learner: lm.BinaryLearningModel, seed: Union[type(None), int], force_recompute=False, show_pbar=True):
 
         savepath = os.path.join(self.cachedir, self.experiment_name, 'seed_' + str(seed), f'ds_{learner.learner_id}.nc')
         if os.path.exists(savepath) and not force_recompute:
@@ -66,7 +66,7 @@ class ExperimentSimulation(object):
 
     @staticmethod
     def simulate_environment(
-            learner: lm.LearningModel,
+            learner: lm.BinaryLearningModel,
             environment: env.Environment,
             RS: np.random.RandomState,
             nreps: int,
@@ -88,7 +88,7 @@ class ExperimentSimulation(object):
                     pbar.update(1)
 
                 image_url = environment.sample_image()
-                action = learner.respond(image_url=image_url)
+                action = learner.respond(image=image_url)
                 action = int(action)
                 reward = environment.provide_feedback(action=action)
                 reward = float(reward)
