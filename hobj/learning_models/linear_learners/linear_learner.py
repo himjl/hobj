@@ -23,24 +23,24 @@ class LinearLearner(lm.BinaryLearningModel):
         self.nactions = nactions
         self.w = np.zeros((self.representational_model.d, self.nactions))
         self.b = np.zeros((self.nactions,))
-        self.reset()
+        self.reset_state()
         return
 
-    def reset(self):
+    def reset_state(self):
         self.representational_model.reset()
         self.update_rule.reset()
         self.w = np.zeros((self.representational_model.d, self.nactions))
         self.b = np.zeros((self.nactions,))
         return
 
-    def respond(self, image: str):
+    def get_response(self, image: str):
         f = self.representational_model.get_features(image_url=image)
         self.f = f
         self.logits = self.f @ self.w + self.b # [action]
         self.action = int(_random_tiebreaking_argmax(self.logits))
         return self.action
 
-    def learn(self, reward: float):
+    def give_feedback(self, reward: float):
         delta_w, delta_b = self.update_rule.get_update(x=self.f, w=self.w, b=self.b, logits=self.logits, action=self.action, reward=reward)  # [action]
         self.w += delta_w
         self.b += delta_b

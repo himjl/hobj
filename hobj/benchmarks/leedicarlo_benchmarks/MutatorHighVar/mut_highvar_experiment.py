@@ -89,18 +89,18 @@ class ExperimentSimulation(object):
         }
 
         for i_rep in range(nreps):
-            learner.reset()
+            learner.reset_state()
             environment.initialize(RS=RS)
             for i_trial in range(ntrials):
                 if pbar is not None:
                     pbar.update(1)
 
                 image_url = environment.sample_image()
-                action = learner.respond(image=image_url)
+                action = learner.get_response(image=image_url)
                 action = int(action)
                 reward = environment.provide_feedback(action=action)
                 reward = float(reward)
-                learner.learn(reward=reward)
+                learner.give_feedback(reward=reward)
 
                 d['image_url'][1][i_trial][i_rep] = image_url
                 d['action'][1][i_trial, i_rep] = action
