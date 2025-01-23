@@ -78,7 +78,7 @@ class Imageset(Generic[IA], ABC):
                 self._sha256_to_image_ids[image_ref.sha256] = []
             self._sha256_to_image_ids[image_ref.sha256].append(image_id)
 
-    def _register_image_urls(self, manifest: ImageManifest, redownload:bool = False):
+    def _register_image_urls(self, manifest: ImageManifest, redownload: bool = False):
         """
         Ensures the entries of the manifest are registered in the data store.
         """
@@ -124,10 +124,14 @@ class Imageset(Generic[IA], ABC):
         """
         return self._image_refs
 
-    def get_annotation(self, *, sha256: str) -> IA:
+    def get_annotation(self, *, image_ref: ImageRef = None, sha256: str = None, ) -> IA:
         """
         Get the annotation for a given image. If an image has multiple annotations, this will throw an error.
         """
+
+        if sha256 is None:
+            sha256 = image_ref.sha256
+
         image_ids = self._sha256_to_image_ids[sha256]
         if len(image_ids) > 1:
             warnings.warn(f"Image {sha256} has multiple annotations: {image_ids}. Returning the first one.")
