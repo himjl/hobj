@@ -46,65 +46,52 @@ class HumanLearningSession(pydantic.BaseModel):
         return self
 
 
-class LearningDataset(ABC):
+class LearningDataset(pydantic.BaseModel):
     """
-    Abstract class for a set of "raw" human learning sessions, downloaded from dataset_url.
-    """
-    dataset_url: str
+    Model which wraps a set of "raw" human learning sessions.
 
-    def __init__(
-            self,
+    A .from_url method is provided to instantiate it from a URL.
+    """
+
+    class Config:
+        frozen = True
+
+    sessions: List[HumanLearningSession]
+
+    @classmethod
+    def from_url(
+            cls,
+            dataset_url: str,
+            redownload:bool = False,
             data_store: DataStore = None,
-            redownload=False,
-    ):
+    ) -> 'LearningDataset':
+        """
+        Instantiates a LearningDataset object from a given URL.
+        :param url:
+        :param redownload:
+        :return:
+        """
         if data_store is None:
-            self.data_store = default_data_store
+            data_store = default_data_store
 
         # Download the data:
-        json_data = self.data_store.get_json_data_from_url(
-            url=self.dataset_url,
+        json_data = data_store.get_json_data_from_url(
+            url=dataset_url,
             redownload=redownload
         )
 
-        # Validate the data:
-        class LearningSessionArray(pydantic.BaseModel):
-            sessions: List[HumanLearningSession]
-        self._learning_sessions = LearningSessionArray(**json_data)
-
-        all_worker_ids = set()
-        for session in self._learning_sessions.sessions:
-            all_worker_ids.add(session.worker_id)
-
-        self._worker_ids = list(all_worker_ids)
-
-    @property
-    def learning_sessions(self) -> List[HumanLearningSession]:
-        """
-        Returns a list of "raw" learning sessions.
-        :return:
-        """
-        return self._learning_sessions.sessions
-
-    @property
-    def worker_ids(self) -> List[str]:
-        return self._worker_ids
+        return cls(
+            **json_data
+        )
 
     def __str__(self):
-        return f'{self.__class__.__name__}(sessions={len(self.learning_sessions)}, workers={len(self.worker_ids)})'
+        unique_workers = set()
+        ntrials =0
+        for session in self.sessions:
+            unique_workers.add(session.worker_id)
+            ntrials += len(session.action_seq)
+        nworkers = len(unique_workers)
+        return f'{self.__class__.__name__}(sessions={len(self.sessions)}, workers={nworkers}, trials={ntrials})'
 
     def __repr__(self):
-        return str(self)
-
-
-
-
-# %%
-class MutatorOneShotDataset(LearningDataset):
-    dataset_url = 'https://hlbdatasets.s3.us-east-1.amazonaws.com/behavior/mutator-oneshot-human-learning-data.json'
-
-# %%
-
-if __name__ == '__main__':
-
-    oneshot_dataset = MutatorOneShotDataset()
-    print(oneshot_dataset)
+        return self.__str__()
