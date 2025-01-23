@@ -1,9 +1,12 @@
-import hobj.learning_models
-import hobj.learning_models as lm
-import os
-import hobj.learning_models.linear_learners.representational_models.representational_model as rms
-import hobj.learning_models.linear_learners.update_rules.update_rules as urs
+import typing
+
+import PIL.Image
 import numpy as np
+
+import hobj.data.schema as schema
+import hobj.learning_models
+from hobj.learning_models.linear_learners.representational_models.representational_model import RepresentationalModel
+from hobj.learning_models.linear_learners.update_rules.update_rules import UpdateRule
 
 
 class LinearLearner(hobj.learning_models.BinaryLearningModel):
@@ -12,41 +15,65 @@ class LinearLearner(hobj.learning_models.BinaryLearningModel):
     """
     def __init__(
             self,
-            representational_model: rms.RepresentationalModel,
-            update_rule: urs.UpdateRule,
-            nactions=2,
+            representational_model: RepresentationalModel,
+            update_rule: UpdateRule,
     ):
-        learner_id = representational_model.representational_model_id + '+' + update_rule.update_rule_id
-        super().__init__(learner_id)
 
         self.representational_model = representational_model
         self.update_rule = update_rule
-        self.nactions = nactions
-        self.w = np.zeros((self.representational_model.d, self.nactions))
-        self.b = np.zeros((self.nactions,))
-        self.reset_state()
+
+        # State variables
+        self.w = None
+        self.b = None
+        self._f_last = None
+        self._logits_last = None
+        self._action_last = None
+        self._generator: np.random.Generator = np.random.default_rng()
+
+        # Initialize state
+        self.reset_state(seed=0)
         return
 
-    def reset_state(self):
-        self.representational_model.reset()
+    def reset_state(self, seed: int) -> None:
+        """
+        :param seed:
+        :return:
+        """
         self.update_rule.reset()
-        self.w = np.zeros((self.representational_model.d, self.nactions))
-        self.b = np.zeros((self.nactions,))
+        self.w = np.zeros((self.representational_model.d, 2))
+        self.b = np.zeros((2,))
+        self._f_last = None
+        self._logits_last = None
+        self._action_last = None
+        self._generator = np.random.default_rng(seed=seed)
+
         return
 
-    def get_response(self, image: str):
-        f = self.representational_model.get_features(image_url=image)
-        self.f = f
-        self.logits = self.f @ self.w + self.b # [action]
-        self.action = int(_random_tiebreaking_argmax(self.logits))
-        return self.action
+    def get_response(
+            self,
+            image: typing.Union[schema.ImageRef, PIL.Image]
+    ) -> typing.Literal[0, 1]:
 
-    def give_feedback(self, reward: float):
-        delta_w, delta_b = self.update_rule.get_update(x=self.f, w=self.w, b=self.b, logits=self.logits, action=self.action, reward=reward)  # [action]
+        f = self.representational_model.get_features(image=image)
+        logits = f @ self.w + self.b
+        action = self._random_tiebreaking_argmax(logits[0], logits[1])
+
+        # Update internal state with traces
+        self._f_last = f
+        self._logits_last = logits
+        self._action_last = action
+        return action
+
+    def give_feedback(self, reward: float) -> None:
+        delta_w, delta_b = self.update_rule.get_update(x=self._f_last, w=self.w, b=self.b, logits=self._logits_last, action=self._action_last, reward=reward)  # [action]
         self.w += delta_w
         self.b += delta_b
         return
 
-
-def _random_tiebreaking_argmax(x):
-    return np.random.choice(np.flatnonzero(x == x.max()))
+    def _random_tiebreaking_argmax(self, logit0, logit1) -> typing.Literal[0, 1]:
+        if logit0 > logit1:
+            return 0
+        elif logit0 < logit1:
+            return 1
+        else:
+            return 0 if self._generator.random() < 0.5 else 1

@@ -38,7 +38,7 @@ class BinaryLearningModel(ABC):
         """
         raise NotImplementedError
 
-
+# %%
 class DummyBinaryLearner(BinaryLearningModel):
     """
     A dummy model which simply returns random outputs, independent of the given image.

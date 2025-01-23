@@ -1,40 +1,32 @@
 import numpy as np
 
+import hobj.data.schema as schema
+from typing import Union, Dict
+import PIL.Image
 
-class RepresentationalModel:
+from abc import ABC, abstractmethod
+
+
+class RepresentationalModel(ABC):
     """
     Model which represents image_urls as feature vectors of shape (d,).
     Meant to be subclassed (see PrecachedRepresentationalModel below for an example).
     """
 
-    def __init__(self, representational_model_id: str):
-        self.representational_model_id = representational_model_id
-        self._d = 1
+    def __init__(self, d:int):
+        if not isinstance(d, int):
+            raise ValueError(f"Expected d to be an int, but got {d} of type {type(d)}")
+        if d <= 0:
+            raise ValueError(f"Expected d to be positive, but got {d}")
+
+        self.d = d
         return
 
-    def reset(self):
-        """
-        Resets the model to its initial state. Not used by all representational models (e.g., fixed intermediate layers of DCNNs), but
-        included here for completeness.
-        :return: None
-        """
-        return
-
-    @property
-    def d(self):
-        """
-        Returns the dimension of the feature vectors.
-        :return:
-        """
-        return self._d
-
-    @d.setter
-    def d(self, value):
-        assert isinstance(value, int)
-        assert value > 0
-        self._d = value
-
-    def get_features(self, image_url: str) -> np.ndarray:
+    @abstractmethod
+    def get_features(
+            self,
+            image: Union[schema.ImageRef, PIL.Image]
+    ) -> np.ndarray:
         """
         Returns a feature vector for the image_url.
         To work successfully with UpdateRule, the feature vector must be of shape (d,) and have norm 1.
@@ -46,10 +38,29 @@ class RepresentationalModel:
 
 class PrecachedRepresentationalModel(RepresentationalModel):
 
-    def __init__(self, url_to_features: dict, representational_model_id: str):
-        self.url_to_features = url_to_features
-        super().__init__(representational_model_id=representational_model_id)
-        self.d = len(url_to_features[list(url_to_features.keys())[0]])
+    def __init__(
+            self,
+            image_sha256_to_features: Dict[str, np.ndarray]
+    ):
+        self.image_sha256_to_features = image_sha256_to_features
 
-    def get_features(self, image_url: str) -> np.ndarray:
-        return self.url_to_features[image_url]
+        # Check that the features are all of the same dimension
+        d = None
+        for sha256, f in image_sha256_to_features.items():
+            if not len(f.shape) == 1:
+                raise ValueError(f"Features for image {sha256} have shape {f.shape}, but expected a 1D array")
+
+            if d is None:
+                d = len(f)
+            elif len(f) != d:
+                raise ValueError(f"Features for image {sha256} have dimension {len(f)}, but expected {d}")
+
+        super().__init__(d = d)
+
+    def get_features(self, image: Union[schema.ImageRef, PIL.Image]) -> np.ndarray:
+
+        if isinstance(image, PIL.Image.Image):
+            image = schema.ImageRef.from_image(image)
+
+        sha256 = image.sha256
+        return self.image_sha256_to_features[sha256]
