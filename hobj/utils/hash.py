@@ -3,14 +3,6 @@ import hashlib
 import PIL.Image
 
 
-def hash_ndarray(x: np.ndarray):
-    assert isinstance(x, np.ndarray)
-    bytes = x.tobytes(order="C")
-    m = hashlib.sha256(string=bytes)
-    digest = m.hexdigest()
-    return digest
-
-
 def hash_image(image: PIL.Image) -> str:
     """
     Hash an image based on its np.uint8 representation.

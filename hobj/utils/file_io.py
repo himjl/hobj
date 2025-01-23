@@ -32,35 +32,6 @@ def unzip_file(zip_path: Path, output_dir: Path) -> None:
         zip_ref.extractall(output_dir)
 
 
-def get_canonical_url(url: str):
-    return url_normalize.url_normalize(url=url)
-
-
-def get_local_save_location(url: str, cachedir: str):
-    canonical_url = get_canonical_url(url)
-    parsed = urlparse(canonical_url)
-
-    path = parsed.path
-    if path.startswith('/'):
-        path = path[1:]
-
-    domain = parsed.netloc  # domain is the hostname
-    save_location = os.path.join(cachedir, domain, path)
-    return save_location
-
-
-def prepare_savepath(savepath):
-    savedir = os.path.dirname(savepath)
-    if not os.path.exists(savedir):
-        os.makedirs(savedir, exist_ok=True)
-
-
-def get_image_from_url(image_url: str):
-    response = requests.get(image_url)
-    img = PIL.Image.open(BytesIO(response.content))
-    return img
-
-
 def download_file(url: str, output_path: Path) -> None:
     # Send a GET request to fetch the file
     response = requests.get(url, stream=True)
@@ -112,11 +83,6 @@ def get_bytes_size(num_bytes: int, output_units: str = None) -> (float, str):
     # Convert the size to the selected unit
     size = num_bytes / unit_conversion[output_units]
     return size, output_units
-
-def load_json(json_path):
-    with open(json_path, 'r') as fb:
-        val = json.load(fb)
-    return val
 
 
 def download_json(url: str) -> Any:
