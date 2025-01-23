@@ -4,16 +4,18 @@ from typing import List, Literal
 import PIL.Image
 import pydantic
 
-from hobj.utils.hash import hash_image
 from hobj.data.store import default_data_store
+from hobj.utils.hash import hash_image
 
 
-# %% Image
-class ImageRef(pydantic.BaseModel):
+class _Common(pydantic.BaseModel):
+    class Config:
+        frozen = True
+
+
+# %% Image data
+class ImageRef(_Common):
     sha256: str = pydantic.Field(pattern=r'^[a-f0-9]{64}$')
-    model_config = pydantic.ConfigDict(
-        frozen=True
-    )
 
     @classmethod
     def from_image(cls, image: PIL.Image, register: bool = True):
@@ -34,11 +36,11 @@ class ImageRef(pydantic.BaseModel):
         return hash(self.sha256)
 
 
-# %% Behavior
-class HumanLearningSession(pydantic.BaseModel):
+# %% Learning tasks
 
-    class Config:
-        frozen = True
+
+# %% Behavior
+class HumanLearningSession(_Common):
 
     worker_id: str = pydantic.Field(
         description='The anonymized worker ID of the participant.'
@@ -63,7 +65,6 @@ class HumanLearningSession(pydantic.BaseModel):
 
     @pydantic.model_validator(mode='after')
     def validate_lengths(self) -> 'HumanLearningSession':
-
         stimulus_len = len(self.stimulus_sha256_seq)
         duration_len = len(self.stimulus_duration_msec_seq)
         action_len = len(self.action_seq)

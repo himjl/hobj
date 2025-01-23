@@ -1,13 +1,14 @@
-import xarray as xr
+from typing import Union
+
 import numpy as np
-from typing import Union, Tuple, List
+import xarray as xr
 
 
 def fit_optimal_lapse_rate(
         phat: Union[np.ndarray, np.generic, float, int],
         p: Union[np.ndarray, np.generic, float, int],
         nway: int,
-):
+) -> float:
     """
     Fits a lapse rate (gamma, which is the probability of a uniform random guess) that minimizes the empirical MSE loss between the phat and p:
 
@@ -44,28 +45,3 @@ def fit_optimal_lapse_rate(
             gamma_star = float(gamma_star)
     return gamma_star
 
-
-def _test():
-    import matplotlib.pyplot as plt
-
-    np.random.seed(0)
-    gamma_true = np.random.rand() * 0.3
-    phat = np.clip(np.random.rand(500) + gamma_true, 0, 1)
-    p = phat - gamma_true
-
-    # Numerical solution
-    nway = 8
-    gamma_seq = np.linspace(0.01, 1, 1000)
-    gamma_star = fit_optimal_lapse_rate(phat, p, nway=nway)
-    phat_gamma = phat[None, :] * (1 - gamma_seq[:, None]) + gamma_seq[:, None] * (1 / nway)  # [gamma, cond]
-    mse = np.square(phat_gamma - p).mean(1)
-    plt.plot(gamma_seq, mse)
-    plt.axvline(gamma_star, color='black', ls='-', label='true')
-    plt.axvline(gamma_seq[np.argmin(mse)], color='red', ls='-', label='numerical')
-    plt.axvline(gamma_star, color='blue', ls=':', label='function')
-    plt.legend()
-    plt.show()
-
-
-if __name__ == '__main__':
-    _test()
