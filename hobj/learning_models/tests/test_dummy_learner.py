@@ -1,5 +1,5 @@
 import pytest
-from hobj.learning_models.learning_model import DummyBinaryLearner
+from hobj.learning_models import DummyBinaryLearner
 import hobj.data.schema as schema
 
 @pytest.fixture

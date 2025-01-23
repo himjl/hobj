@@ -1,4 +1,5 @@
 import hobj.config as config
+import hobj.learning_models
 import hobj.learning_models.learning_model as lm
 import hobj.benchmarks.experiment_simulation.environment_depr as env
 import hobj.utils.file_io as io
@@ -30,7 +31,7 @@ class ExperimentSimulation(object):
         raise NotImplementedError
         return [env.Environment()]
 
-    def run(self, learner: lm.BinaryLearningModel, seed: Union[type(None), int], show_pbar=True):
+    def run(self, learner: hobj.learning_models.BinaryLearningModel, seed: Union[type(None), int], show_pbar=True):
 
 
         dlist = []
@@ -60,7 +61,7 @@ class ExperimentSimulation(object):
 
     @staticmethod
     def simulate_environment(
-            learner: lm.BinaryLearningModel,
+            learner: hobj.learning_models.BinaryLearningModel,
             environment: env.Environment,
             RS: np.random.RandomState,
             nreps: int,

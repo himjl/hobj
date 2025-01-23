@@ -4,6 +4,7 @@ import xarray as xr
 import numpy as np
 from tqdm import trange
 
+import hobj.learning_models
 import hobj.learning_models.learning_model as lm
 import hobj.data.images.depr_imagesets as imagesets
 import hobj.benchmarks.leedicarlo_benchmarks.MutatorOneshot.mut_oneshot_experiment as mutator
@@ -19,6 +20,7 @@ import hobj.statistics.hypothesis_testing.approximated_null_distribution as appr
 
 class MutatorOneshotBenchmark:
     environment_name_dim = 'session'
+    probe_trials = {9, 14, 19}
 
     def __init__(self):
         super().__init__()
@@ -103,7 +105,7 @@ class MutatorOneshotBenchmark:
             'MutatorB2000_2909,MutatorB2000_4256'
         ]
 
-    def evaluate_model(self, learner: lm.BinaryLearningModel, force_recompute: bool = False):
+    def evaluate_model(self, learner: hobj.learning_models.BinaryLearningModel, force_recompute: bool = False):
         """
         :param learner: LearningModel
         :param force_recompute: bool. If True, recompute the results even if they are already cached.

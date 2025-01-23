@@ -1,11 +1,12 @@
-import hobj.learning_models.learning_model as lm
+import hobj.learning_models
+import hobj.learning_models as lm
 import os
 import hobj.learning_models.linear_learners.representational_models.representational_model as rms
 import hobj.learning_models.linear_learners.update_rules.update_rules as urs
 import numpy as np
 
 
-class LinearLearner(lm.BinaryLearningModel):
+class LinearLearner(hobj.learning_models.BinaryLearningModel):
     """
     A learning model based on a standard cognitive theory of learning.
     """

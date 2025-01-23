@@ -6,7 +6,7 @@ import numpy as np
 import pydantic
 
 import hobj.data.schema as schema
-from hobj.learning_models.learning_model import BinaryLearningModel
+from hobj.learning_models import BinaryLearningModel
 
 
 class BinaryTask(ABC):

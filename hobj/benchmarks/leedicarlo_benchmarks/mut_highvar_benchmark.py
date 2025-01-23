@@ -5,6 +5,7 @@ from typing import List
 import numpy as np
 import scipy.stats as ss
 
+import hobj.learning_models
 import hobj.statistics.lapse_rate as lapse_rate_funcs
 import hobj.statistics.variance_estimates.binomial as binomial_funcs
 from hobj.data.behavior.template import LearningDataset
@@ -13,8 +14,6 @@ from hobj.learning_models import learning_model as lm
 
 class MutatorHighVarBenchmark:
     nboot = 1000
-    tearly = slice(1, 6)
-    tlate = slice(94, 100)
 
     dataset_url = 'https://hlbdatasets.s3.us-east-1.amazonaws.com/behavior/mutator-highvar-human-learning-data.json'
 
@@ -32,7 +31,7 @@ class MutatorHighVarBenchmark:
         k: np.ndarray  # [trial, subtask]
         n: np.ndarray  # [trial, subtask]
 
-    def _simulate_experiment(self, learner: lm.BinaryLearningModel, seed: int) -> SimulateExperimentResult:
+    def _simulate_experiment(self, learner: hobj.learning_models.BinaryLearningModel, seed: int) -> SimulateExperimentResult:
         # Todo
         nreps = 500
         ntrials = 100
@@ -66,7 +65,7 @@ class MutatorHighVarBenchmark:
         _legacy_msen: float
         _legacy_msen_sigma: float
 
-    def evaluate_model(self, learner: lm.BinaryLearningModel, seed: int = 0) -> EvaluateModelResult:
+    def evaluate_model(self, learner: hobj.learning_models.BinaryLearningModel, seed: int = 0) -> EvaluateModelResult:
         """
         :param learner: LearningModel
         :param force_recompute: bool. If True, recompute the model behavior, even if it is already cached.
@@ -107,7 +106,6 @@ class MutatorHighVarBenchmark:
         # Get point estimates:
         msen_point = msen_elementwise.mean()
         msen_sigma = ss.sem(msen_elementwise, ddof = 1)
-
 
         # Package return
         return self.EvaluateModelResult(
