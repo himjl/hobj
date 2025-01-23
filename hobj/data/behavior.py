@@ -28,7 +28,10 @@ def _load_learning_sessions(
 
 
 # %% Data loaders
-def load_highvar_behavior(redownload: bool = False) -> List[HumanLearningSession]:
+def load_highvar_behavior(
+        redownload: bool = False,
+        remove_probe_trials: bool = True
+) -> List[HumanLearningSession]:
     """
     Load the "raw" human learning data from Experiment 1 of Lee and DiCarlo 2023.
     :return:
@@ -39,7 +42,29 @@ def load_highvar_behavior(redownload: bool = False) -> List[HumanLearningSession
         redownload=redownload
     )
 
-    return sessions
+    if not remove_probe_trials:
+        return sessions
+
+
+    def filter(vals: list):
+        probe_trials = {25, 51, 77, 103}
+        return [vals[i] for i in range(len(vals)) if i not in probe_trials]
+
+    filtered_sessions = []
+    for session in sessions:
+        # Filter out indices in probe_trials
+        filtered_session = HumanLearningSession(
+            worker_id = session.worker_id,
+            stimulus_sha256_seq = filter(session.stimulus_sha256_seq),
+            stimulus_duration_msec_seq = filter(session.stimulus_duration_msec_seq),
+            action_seq = filter(session.action_seq),
+            reward_seq = filter(session.reward_seq),
+            timestamp_start_seq = filter(session.timestamp_start_seq)
+        )
+
+        filtered_sessions.append(filtered_session)
+
+    return filtered_sessions
 
 
 def load_oneshot_behavior(redownload: bool = False) -> List[HumanLearningSession]:
@@ -54,3 +79,6 @@ def load_oneshot_behavior(redownload: bool = False) -> List[HumanLearningSession
     )
 
     return sessions
+
+if __name__ == '__main__':
+    sessions=load_highvar_behavior()
