@@ -38,6 +38,7 @@ class BinaryLearningModel(ABC):
         """
         raise NotImplementedError
 
+
 # %%
 class DummyBinaryLearner(BinaryLearningModel):
     """
@@ -54,7 +55,6 @@ class DummyBinaryLearner(BinaryLearningModel):
             self,
             image: typing.Union[schema.ImageRef, PIL.Image],
     ) -> typing.Literal[0, 1]:
-
         action = self.random_generator.integers(2)
         action = int(action)
         return action
