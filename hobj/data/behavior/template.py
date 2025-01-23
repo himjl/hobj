@@ -10,6 +10,9 @@ from hobj.data.store import DataStore, default_data_store
 # %%
 class HumanLearningSession(pydantic.BaseModel):
 
+    class Config:
+        frozen = True
+
     worker_id: str = pydantic.Field(
         description='The anonymized worker ID of the participant.'
     )
@@ -45,7 +48,7 @@ class HumanLearningSession(pydantic.BaseModel):
 
         return self
 
-
+# %%
 class LearningDataset(pydantic.BaseModel):
     """
     Model which wraps a set of "raw" human learning sessions.

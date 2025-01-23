@@ -144,7 +144,3 @@ class MutatorOneShotGeneralizationDataset(template.SR_Dataset):
         # Remove data variables
         ds_flat = ds_flat[['perf', 'reaction_time_msec']]
         return ds_flat
-
-if __name__ == '__main__':
-    dataset = MutatorHighVarDataset()
-    ds_data_example = dataset.load_ds_data()

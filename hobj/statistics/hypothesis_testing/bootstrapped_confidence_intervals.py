@@ -1,11 +1,12 @@
 import xarray as xr
 
+
 def estimate_basic_confidence_interval(
         alpha: float,
         ds_data: xr.Dataset,
         ds_boot: xr.Dataset,
         statistic_functional,
-        parameter_functional = None,
+        parameter_functional=None,
 
 ):
     assert 'boot_iter' in ds_boot.dims
@@ -23,8 +24,8 @@ def estimate_basic_confidence_interval(
     else:
         empirical_parameter = ds_boot_stats.mean('boot_iter')
 
-    low = ds_boot_stats.quantile(alpha/2,'boot_iter', )
-    high = ds_boot_stats.quantile( 1 - alpha / 2,'boot_iter',)
+    low = ds_boot_stats.quantile(alpha / 2, 'boot_iter')
+    high = ds_boot_stats.quantile(1 - alpha / 2, 'boot_iter')
 
     delta1 = empirical_parameter - low
     delta2 = high - empirical_parameter
