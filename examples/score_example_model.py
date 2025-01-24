@@ -1,18 +1,16 @@
-import hobj.learning_models
-import hobj.learning_models.learning_model as lm
-import hobj.benchmarks.leedicarlo_benchmarks.mut_highvar_benchmark as highvar_benchmark
-import hobj.benchmarks.leedicarlo_benchmarks.MutatorOneshot.mut_oneshot_benchmark as oneshot_benchmark
+# %% Instantiate benchmarks
+from hobj.benchmarks import MutatorHighVarBenchmark
 
-dummy_model = hobj.learning_models.DummyBinaryLearner()
+experiment1_benchmark = MutatorHighVarBenchmark()
 
-hv = highvar_benchmark.MutatorHighVarBenchmark()
-os = oneshot_benchmark.MutatorOneshotBenchmark()
+# %% Instantiate learner
+from hobj.learning_models import DummyBinaryLearner
+learner = DummyBinaryLearner()
 
-result = hv.evaluate_model(
-    learner=dummy_model,
-)
-print(result)
+# %% Score
+experiment1_result = experiment1_benchmark(learner=learner)
+print(experiment1_result)
 
-result2 = os.evaluate_model(
-    learner=dummy_model,
-)
+# %% Visualize results
+import matplotlib.pyplot as plt
+

@@ -1,0 +1,2 @@
+from hobj.benchmarks.mut_highvar_benchmark import MutatorHighVarBenchmark
+#from hobj.benchmarks.mut_oneshot_benchmark import MutatorOneshotBenchmark

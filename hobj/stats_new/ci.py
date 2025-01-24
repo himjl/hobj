@@ -37,4 +37,4 @@ def estimate_basic_bootstrap_CI(
     CI_low = point_estimate - delta2
     CI_high = point_estimate + delta1
 
-    return CI_low, CI_high
+    return float(CI_low), float(CI_high)

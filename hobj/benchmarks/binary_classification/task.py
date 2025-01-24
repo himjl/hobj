@@ -1,10 +1,11 @@
-from typing import List, Optional
+from typing import List, Union
 
 import numpy as np
 import pydantic
 
 from hobj.data.schema import ImageRef
 from hobj.learning_models import BinaryLearningModel
+from uuid import uuid4
 
 
 # %%
@@ -21,7 +22,6 @@ class BinaryClassificationSubtask(pydantic.BaseModel):
     classB: List[ImageRef]
     ntrials: int = pydantic.Field(description='The number of trials in the subtask.', gt=0)
     replace: bool = pydantic.Field(description='Whether to show stimulus images with replacement or not.')
-    name: Optional[str] = pydantic.Field(description='A human-readable name for the subtask.', default=None)
 
     @pydantic.field_validator('classA', 'classB', mode='after')
     @classmethod
@@ -37,17 +37,16 @@ class BinaryClassificationSubtask(pydantic.BaseModel):
     def simulate_session(
             self,
             learner: BinaryLearningModel,
-            seed: int,
-    ) -> 'BinaryClassificationSubtaskResult':
+            seed: Union[int, None],
+    ) -> np.ndarray:
         """
         Convenience method to simulate a session of the binary classification task on a given BinaryLearningModel.
         :param learner:
         :param seed:
-        :return:
+        :return: a [ntrials] boolean np.ndarray vector where True indicates a correct response.
         """
 
-        perf_seq: List[bool] = []
-        stimulus_seq: List[ImageRef] = []
+        perf_seq = np.zeros(self.ntrials, dtype=bool)
 
         # Initialize random state of environment
         gen = np.random.default_rng(seed=seed)
@@ -61,11 +60,16 @@ class BinaryClassificationSubtask(pydantic.BaseModel):
         else:
             i_image_seq = gen.permutation(n_all_images)[:self.ntrials]
 
+        # Randomly sample the reward contingency
+        classA_correct_action = 0 if gen.random() < 0.5 else 1
+        classB_correct_action = 1 - classA_correct_action
+
         # Iterate over trials
+        i_trial = 0
         for i_image in i_image_seq:
             # Retrieve trial information
             image_ref_cur = self.classA[i_image] if i_image < num_classA else self.classB[i_image - num_classA]
-            correct_action_cur = 0 if i_image < num_classA else 1
+            correct_action_cur = classA_correct_action if i_image < num_classA else classB_correct_action
 
             # Get response from learner
             a = learner.get_response(image=image_ref_cur)
@@ -77,29 +81,8 @@ class BinaryClassificationSubtask(pydantic.BaseModel):
             learner.give_feedback(feedback)
 
             # Record results of trial
-            perf_seq.append(feedback > 0)
-            stimulus_seq.append(image_ref_cur)
+            perf_seq[i_trial] = feedback > 0
 
-        return BinaryClassificationSubtaskResult(
-            subtask=self,
-            perf_seq=perf_seq,
-        )
+            i_trial += 1
 
-
-# %%
-class BinaryClassificationSubtaskResult(pydantic.BaseModel):
-    """
-    A class which represents the results of performing a binary classification subtask.
-    """
-
-    subtask: BinaryClassificationSubtask
-
-    perf_seq: List[bool] = pydantic.Field(
-        description='The performance (correct or incorrect) of the learner on each trial.'
-    )
-
-    @pydantic.model_validator(mode='after')
-    def validate_perf(self) -> 'BinaryClassificationSubtaskResult':
-        if not len(self.perf_seq) == self.subtask.ntrials:
-            raise ValueError(f'Performance sequence length does not match number of trials. Got: {len(self.perf_seq)}')
-        return self
+        return perf_seq

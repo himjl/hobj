@@ -6,11 +6,11 @@ import numpy as np
 
 from hobj.data import schema as schema
 
-
+# %%
 class BinaryLearningModel(ABC):
 
     @abstractmethod
-    def reset_state(self, seed: int) -> None:
+    def reset_state(self, seed: typing.Union[int, None]) -> None:
         """
         This function resets the LearningModel to some initial state.
         :param seed: if the LearningModel has any stochastic components, this seed should be used to seed them.
@@ -48,7 +48,7 @@ class DummyBinaryLearner(BinaryLearningModel):
     def __init__(self, seed: int = 0):
         self.random_generator = np.random.default_rng(seed=seed)
 
-    def reset_state(self, seed: int) -> None:
+    def reset_state(self, seed: typing.Union[int, None]) -> None:
         self.random_generator = np.random.default_rng(seed=seed)
 
     def get_response(

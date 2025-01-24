@@ -30,7 +30,7 @@ def test_simulate_subtask():
 
     learner = DummyBinaryLearner(seed=0)
 
-    result = subtask.simulate_session(
+    perf_seq = subtask.simulate_session(
         learner=learner,
         seed=0
     )

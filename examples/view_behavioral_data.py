@@ -1,20 +1,30 @@
-import hobj.benchmarks.leedicarlo_benchmarks.mut_highvar_benchmark as highvar_benchmark
-import hobj.benchmarks.leedicarlo_benchmarks.MutatorOneshot.mut_oneshot_benchmark as oneshot_benchmark
+import hobj.benchmarks.mut_highvar_benchmark as highvar_benchmark
+#import hobj.benchmarks.todo.mut_oneshot_benchmark as oneshot_benchmark
 import matplotlib.pyplot as plt
 import numpy as np
 
-# %% View processed data for Experiment 1
+# %% View data for Experiment 1
 experiment1_benchmark = highvar_benchmark.MutatorHighVarBenchmark()
-ds_experiment1 = experiment1_benchmark.ds_behavioral_statistics
+data = experiment1_benchmark.data
+
+stacked_data = []
+for subtask in data:
+    subtask_data = np.array([
+        data[subtask][worker_id] for worker_id in data[subtask]
+    ])
+    stacked_data.append(subtask_data)
+stacked_data = np.concat(stacked_data, axis=0)
 
 plt.figure()
-plt.errorbar(x=np.arange(100) + 1, y=ds_experiment1.glc, yerr=ds_experiment1.glc_std)
+plt.imshow(stacked_data,  aspect = 'auto')
 plt.xlabel('trial')
-plt.ylabel('subtask-and-subject averaged accuracy')
+plt.ylabel('session')
+plt.title("Performance data")
 plt.show()
 
 
 # %% View processed data for Experiment 2
+raise NotImplementedError
 experiment2_benchmark = oneshot_benchmark.MutatorOneshotBenchmark()
 ds_experiment2 = experiment2_benchmark.ds_behavioral_statistics
 

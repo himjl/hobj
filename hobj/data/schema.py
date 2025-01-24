@@ -41,6 +41,9 @@ class ImageRef(_Common):
 
 # %% Behavior
 class HumanLearningSession(_Common):
+    """
+    A representation of the "raw" data collected from a human learning session.
+    """
 
     worker_id: str = pydantic.Field(
         description='The anonymized worker ID of the participant.'

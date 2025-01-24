@@ -3,7 +3,7 @@ from typing import List
 import pydantic
 
 from hobj.data.schema import HumanLearningSession
-from hobj.data.store import DataStore, default_data_store
+from hobj.data.store import default_data_store
 
 __all__ = ['load_highvar_behavior', 'load_oneshot_behavior']
 
@@ -45,7 +45,6 @@ def load_highvar_behavior(
     if not remove_probe_trials:
         return sessions
 
-
     def filter(vals: list):
         probe_trials = {25, 51, 77, 103}
         return [vals[i] for i in range(len(vals)) if i not in probe_trials]
@@ -54,12 +53,12 @@ def load_highvar_behavior(
     for session in sessions:
         # Filter out indices in probe_trials
         filtered_session = HumanLearningSession(
-            worker_id = session.worker_id,
-            stimulus_sha256_seq = filter(session.stimulus_sha256_seq),
-            stimulus_duration_msec_seq = filter(session.stimulus_duration_msec_seq),
-            action_seq = filter(session.action_seq),
-            reward_seq = filter(session.reward_seq),
-            timestamp_start_seq = filter(session.timestamp_start_seq)
+            worker_id=session.worker_id,
+            stimulus_sha256_seq=filter(session.stimulus_sha256_seq),
+            stimulus_duration_msec_seq=filter(session.stimulus_duration_msec_seq),
+            action_seq=filter(session.action_seq),
+            reward_seq=filter(session.reward_seq),
+            timestamp_start_seq=filter(session.timestamp_start_seq)
         )
 
         filtered_sessions.append(filtered_session)
@@ -80,5 +79,6 @@ def load_oneshot_behavior(redownload: bool = False) -> List[HumanLearningSession
 
     return sessions
 
+
 if __name__ == '__main__':
-    sessions=load_highvar_behavior()
+    sessions = load_highvar_behavior()
