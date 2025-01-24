@@ -1,16 +1,12 @@
 import json
-import os
 import urllib.request
 import zipfile
-from io import BytesIO
 from pathlib import Path
-from urllib.parse import urlparse
-
-import PIL.Image
-import requests
-import url_normalize
-from tqdm import tqdm
 from typing import Any
+
+import requests
+from tqdm import tqdm
+
 
 def unzip_file(zip_path: Path, output_dir: Path) -> None:
     """
