@@ -6,7 +6,7 @@ from tqdm import trange
 
 import hobj.learning_models
 import hobj.data.images.depr_imagesets as imagesets
-import hobj.benchmarks.todo.mut_oneshot_experiment as mutator
+import hobj.benchmarks.generalization.mut_oneshot_experiment as mutator
 
 
 import hobj.data.depr_behavior.human_data as human_data

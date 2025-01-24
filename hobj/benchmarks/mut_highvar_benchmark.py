@@ -1,16 +1,16 @@
+from typing import List, Dict
+
 from hobj.benchmarks.binary_classification.scoring import LearningCurveBenchmark, LearningCurveBenchmarkConfig, TargetSubtaskData
 from hobj.benchmarks.binary_classification.task import BinaryClassificationSubtask
 from hobj.data.behavior import load_highvar_behavior
 from hobj.data.images import MutatorHighVarImageset
-from hobj.data.schema import ImageRef
-
-from typing import List, Dict
 
 
-# %% Load data into format expected by benchmark
+# %%
 class MutatorHighVarBenchmark(LearningCurveBenchmark):
 
     def __init__(self):
+        # Load data into format expected by benchmark
 
         # Load imageset:
         imageset = MutatorHighVarImageset()
@@ -62,7 +62,7 @@ class MutatorHighVarBenchmark(LearningCurveBenchmark):
                 results=subtask_name_to_results[name]
             )
 
-        # Instantiate config object
+        # Instantiate benchmark config object
         config = LearningCurveBenchmarkConfig(
             subtask_name_to_data=subtask_name_to_data,
             num_simulations_per_subtask=500,
