@@ -15,8 +15,9 @@ class BinaryClassificationSubtask(pydantic.BaseModel):
     Feedback consists of +1 or -1 rewards, depending on the class of the image.
     """
 
-    class Config:
-        frozen = True
+    model_config = dict(
+        frozen=True
+    )
 
     classA: List[ImageRef]
     classB: List[ImageRef]

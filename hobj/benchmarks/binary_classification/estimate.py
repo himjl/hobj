@@ -7,6 +7,8 @@ from hobj.stats_new.learning_curve import calculate_learning_curve
 
 class LearningCurveStatistics(xr.Dataset):
 
+    __slots__ = ()
+
     def __init__(
             self,
             subtask_name_to_perf: Dict[str, np.ndarray],  # subtask: [session, trial]

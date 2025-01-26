@@ -19,8 +19,9 @@ class TargetSubtaskData(pydantic.BaseModel):
     subtask: BinaryClassificationSubtask  # The subtask which generated the associated results
     results: np.ndarray  # [session, trial] boolean matrix of performance
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = dict(
+        arbitrary_types_allowed=True
+    )
 
     @pydantic.model_validator(mode='after')
     def validate_results(self) -> 'TargetSubtaskData':

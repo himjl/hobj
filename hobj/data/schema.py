@@ -9,8 +9,9 @@ from hobj.utils.hash import hash_image
 
 
 class _Common(pydantic.BaseModel):
-    class Config:
-        frozen = True
+    model_config = dict(
+        frozen=True
+    )
 
 
 # %% Image data
