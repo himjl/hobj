@@ -7,7 +7,7 @@ fonttools==4.55.6
 idna==3.10
 iniconfig==2.0.0
 kiwisolver==1.4.8
-matplotlib==3.10.0
+matplotlib==3.9.2
 numpy==2.2.2
 packaging==24.2
 pandas==2.2.3

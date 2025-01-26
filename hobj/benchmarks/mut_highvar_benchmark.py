@@ -1,4 +1,5 @@
 from typing import List, Dict
+import numpy as np
 
 from hobj.benchmarks.binary_classification.scoring import LearningCurveBenchmark, LearningCurveBenchmarkConfig, TargetSubtaskData
 from hobj.benchmarks.binary_classification.task import BinaryClassificationSubtask
@@ -51,9 +52,13 @@ class MutatorHighVarBenchmark(LearningCurveBenchmark):
                     replace=False,
                 )
                 subtask_name_to_subtask[subtask_name] = subtask
-                subtask_name_to_results[subtask_name] = {}
+                subtask_name_to_results[subtask_name] = []
 
-            subtask_name_to_results[subtask_name][session.worker_id] = perf_seq
+            subtask_name_to_results[subtask_name].append(perf_seq)
+
+        # Cast as numpy
+        for name in subtask_name_to_results:
+            subtask_name_to_results[name] = np.array(subtask_name_to_results[name]) # [session, trial]
 
         subtask_name_to_data: Dict[str, TargetSubtaskData] = {}
         for name in subtask_name_to_results:

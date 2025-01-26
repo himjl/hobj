@@ -2,30 +2,38 @@ from dataclasses import dataclass
 from typing import List, Dict, Union, Tuple, Optional, Iterator
 
 import numpy as np
-from scipy import stats as ss
-
-from hobj.benchmarks.binary_classification.task import BinaryClassificationSubtask
-from hobj.learning_models import BinaryLearningModel
-from hobj.statistics.variance_estimates import binomial as binomial_funcs
 import pydantic
+import xarray as xr
 from tqdm import tqdm
-from hobj.stats_new.learning_curve import calculate_learning_curve
-from hobj.stats_new.ci import estimate_basic_bootstrap_CI
 
 import hobj.data.schema as schema
+from hobj.benchmarks.binary_classification.estimate import LearningCurveStatistics
+from hobj.benchmarks.binary_classification.task import BinaryClassificationSubtask
+from hobj.learning_models import BinaryLearningModel
+from hobj.stats_new.ci import estimate_basic_bootstrap_CI
 
-import xarray as xr
+
 # %% Models for configuring a LearningCurveBenchmark:
 
 class TargetSubtaskData(pydantic.BaseModel):
     subtask: BinaryClassificationSubtask  # The subtask which generated the associated results
-    results: Dict[str, List[bool]]  # worker_id -> perf_seq
+    results: np.ndarray  # [session, trial] boolean matrix of performance
+
+    class Config:
+        arbitrary_types_allowed = True
 
     @pydantic.model_validator(mode='after')
     def validate_results(self) -> 'TargetSubtaskData':
-        for worker_id, perf_seq in self.results.items():
-            if len(perf_seq) != self.subtask.ntrials:
-                raise ValueError(f"Expected {self.subtask.ntrials} trials, but got {len(perf_seq)} trials for worker {worker_id}")
+        # Check shape
+        if len(self.results.shape) != 2:
+            raise ValueError(f"Expected 2D results matrix [session, trial], but got {len(self.results.shape)} dimensions")
+
+        if self.subtask.ntrials != self.results.shape[1]:
+            raise ValueError(f"Expected {self.subtask.ntrials} trials, but got {self.results.shape[1]} trials")
+
+        # Check dtype
+        if self.results.dtype != np.bool:
+            raise ValueError(f"Expected boolean dtype, but got {self.results.dtype}")
 
         return self
 
@@ -52,32 +60,6 @@ class LearningCurveBenchmarkConfig(pydantic.BaseModel):
         else:
             self.ntrials = ntrials_observed.pop()
         return self
-
-
-class LearningCurveStatistics(xr.Dataset):
-    def __init__(
-            self,
-            subtask_names: List[str],
-            phat: np.ndarray,
-            varhat_phat: np.ndarray,
-            boot_phat: np.ndarray,
-            boot_varhat_phat: np.ndarray,
-    ):
-        data_vars = dict(
-            phat = (['subtask', 'trial'], phat),
-            varhat_phat = (['subtask', 'trial'], varhat_phat),
-            boot_phat = (['boot_iter', 'subtask', 'trial'], boot_phat),
-            boot_varhat_phat = (['boot_iter', 'subtask', 'trial'], boot_varhat_phat),
-        )
-
-        coords = dict(
-            subtask = subtask_names,
-        )
-
-        super().__init__(
-            data_vars = data_vars,
-            coords = coords
-        )
 
 
 # %%
@@ -134,62 +116,26 @@ class LearningCurveBenchmark:
         self.subtask_name_to_subtask: Dict[str, BinaryClassificationSubtask] = {
             name: config.subtask_name_to_data[name].subtask for name in self.subtask_names
         }
-        self.subtask_name_to_target_data: Dict[str, Dict[str, List[bool]]] = {
-            subtask_name: target_subtask.results for subtask_name, target_subtask in self.config.subtask_name_to_data.items()
-        }
 
-        # Cache target learning curve statistics
-        phat = np.zeros((len(self.subtask_names), self.config.ntrials))
-        varhat_phat = np.zeros((len(self.subtask_names), self.config.ntrials))
-        boot_phat = np.zeros((self.config.num_bootstrap_samples, len(self.subtask_names), self.config.ntrials))
-        boot_varhat_phat = np.zeros((self.config.num_bootstrap_samples, len(self.subtask_names), self.config.ntrials))
-
-        for i_subtask, subtask_name in enumerate(self.subtask_names):
-            subtask = self.subtask_name_to_subtask[subtask_name]
-
-            nworkers = len(self.subtask_name_to_target_data[subtask_name])
-            perf_mat = np.zeros((nworkers, subtask.ntrials), dtype=np.bool)
-
-            for i_worker, (worker_id, perf_seq) in enumerate(self.subtask_name_to_target_data[subtask_name].items()):
-                perf_mat[i_worker] = perf_seq
-
-            subtask_learning_curve_statistics = calculate_learning_curve(
-                perf_matrix=perf_mat,
-                bootstrap_seed=i_subtask,
-                nbootstrap_samples=self.config.num_bootstrap_samples,
-                repetition_axis=0,
-            )
-
-            phat[i_subtask] = subtask_learning_curve_statistics.phat
-            varhat_phat[i_subtask] = subtask_learning_curve_statistics.varhat_phat
-            boot_phat[:, i_subtask] = subtask_learning_curve_statistics.boot_phat
-            boot_varhat_phat[:, i_subtask] = subtask_learning_curve_statistics.boot_varhat_phat
+        self.subtask_name_to_perf: Dict[str, np.ndarray] = {}
+        for name in self.subtask_names:
+            self.subtask_name_to_perf[name] = config.subtask_name_to_data[name].results
 
         self._target_statistics = LearningCurveStatistics(
-            subtask_names=self.subtask_names,
-            phat=phat,
-            varhat_phat=varhat_phat,
-            boot_phat=boot_phat,
-            boot_varhat_phat=boot_varhat_phat,
+            subtask_name_to_perf=self.subtask_name_to_perf,
+            nbootstrap_samples=self.config.num_bootstrap_samples,
         )
 
-
     @property
-    def data(self) -> Dict[str, Dict[str, List[bool]]]:
+    def target_data(self) -> Dict[str, np.ndarray]:
         """
-        Returns the target data as a nested dictionary. Example usage
-
-            target_data = self.get_target_as_json()
-            print(target_data[subtask_name][worker_id])  # List[bool] of trial performances on {subtask_name} by {worker_id}.
-
-        Useful for performing custom analyses on the target data.
+        Returns the target data for the benchmark, which is a dictionary of subtask_name -> [session, trial] boolean matrix of performance.
         :return:
         """
-
-        return self.subtask_name_to_target_data
+        return self.subtask_name_to_perf
 
     @property
-    def target_statistics(self) -> xr.Dataset:
+    def target_statistics(self) -> LearningCurveStatistics:
         """
         Returns point estimates of the mean (and an estimate of the variance of that estimator) of the binomial proportion for the target data,
         and bootstrapped resamples of those statistics.
@@ -217,12 +163,7 @@ class LearningCurveBenchmark:
         """
 
         # Get model learning curve statistics:
-        # Todo: deduplicate with constructor
-        phat = np.zeros((len(self.subtask_names), self.config.ntrials))
-        varhat_phat = np.zeros((len(self.subtask_names), self.config.ntrials))
-        boot_phat = np.zeros((self.config.num_bootstrap_samples, len(self.subtask_names), self.config.ntrials))
-        boot_varhat_phat = np.zeros((self.config.num_bootstrap_samples, len(self.subtask_names), self.config.ntrials))
-
+        subtask_name_to_model_perfs: Dict[str, np.ndarray] = {}
         for i_subtask, subtask_name in enumerate(tqdm(self.subtask_names, desc='Subtask simulations:', disable=not show_pbar)):
             # Get [simulation, trial] boolean performance matrix for the model
             perf_matrix = self.simulate_model_behavior(
@@ -231,25 +172,12 @@ class LearningCurveBenchmark:
                 nsimulations=self.config.num_simulations_per_subtask,
             )
 
-            # Calculate statistics
-            subtask_estimate = calculate_learning_curve(
-                perf_matrix=perf_matrix,
-                bootstrap_seed=None,
-                nbootstrap_samples=self.config.num_bootstrap_samples,
-                repetition_axis=0,
-            )
-            phat[i_subtask] = subtask_estimate.phat
-            varhat_phat[i_subtask] = subtask_estimate.varhat_phat
-            boot_phat[:, i_subtask] = subtask_estimate.boot_phat
-            boot_varhat_phat[:, i_subtask] = subtask_estimate.boot_varhat_phat
+            subtask_name_to_model_perfs[subtask_name] = perf_matrix
 
         # Assemble into a single matrix
         model_statistics = LearningCurveStatistics(
-            subtask_names=self.subtask_names,
-            phat=phat,
-            varhat_phat=varhat_phat,
-            boot_phat=boot_phat,
-            boot_varhat_phat=boot_varhat_phat,
+            subtask_name_to_perf=subtask_name_to_model_perfs,
+            nbootstrap_samples=self.config.num_bootstrap_samples,
         )
 
         # Calculate comparison statistics between target and model learning curves:
@@ -275,9 +203,9 @@ class LearningCurveBenchmark:
         msen_sigma = np.std(msen_boot, ddof=1)
 
         msen_CI95 = estimate_basic_bootstrap_CI(
-            alpha = 0.05,
-            point_estimate = msen_point,
-            bootstrapped_point_estimates = np.array(msen_boot),
+            alpha=0.05,
+            point_estimate=msen_point,
+            bootstrapped_point_estimates=np.array(msen_boot),
         )
 
         # Return result
@@ -286,7 +214,7 @@ class LearningCurveBenchmark:
             msen_sigma=float(msen_sigma),
             msen_CI95=msen_CI95,
             model_statistics=model_statistics,
-            lapse_rate  = lapse_rate,
+            lapse_rate=lapse_rate,
         )
 
     @classmethod
@@ -308,7 +236,7 @@ class LearningCurveBenchmark:
             )
             model_phat = model_phat * (1 - lapse_rate) + 0.5 * lapse_rate
             model_varhat_phat = model_varhat_phat * (1 - lapse_rate) ** 2
-        else :
+        else:
             lapse_rate = None
 
         msen = np.square(model_phat - target_phat).mean(condition_dims) - model_varhat_phat.mean(condition_dims) - target_varhat_phat.mean(condition_dims)
@@ -339,5 +267,4 @@ class LearningCurveBenchmark:
         denominator = (2 / (nway ** 2) - 4 * pmodel / nway + 2 * (pmodel ** 2)).sum(dim=condition_dims)
         gamma_star = numerator / denominator
         gamma_star = np.clip(gamma_star, 0, 1)
-        print(gamma_star)
         return gamma_star
