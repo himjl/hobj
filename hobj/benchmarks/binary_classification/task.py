@@ -31,8 +31,8 @@ class BinaryClassificationSubtask(pydantic.BaseModel):
 
     @pydantic.model_validator(mode='after')
     def validate_image_refs(self) -> 'BinaryClassificationSubtask':
-        if self.replace and len(self.classA) + len(self.classB) < self.ntrials:
-            raise ValueError(f"Specified replace=True, but only {len(self.classA) + len(self.classB)} images available. (len(classA)={len(self.classA)}; len(classB)={len(self.classB)}")
+        if not self.replace and len(self.classA) + len(self.classB) < self.ntrials:
+            raise ValueError(f"Specified replace=False, but only {len(self.classA) + len(self.classB)} images available. (len(classA)={len(self.classA)}; len(classB)={len(self.classB)}")
         return self
 
     def simulate_session(

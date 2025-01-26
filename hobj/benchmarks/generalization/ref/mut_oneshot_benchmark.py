@@ -6,8 +6,7 @@ from tqdm import trange
 
 import hobj.learning_models
 import hobj.data.images.depr_imagesets as imagesets
-import hobj.benchmarks.generalization.mut_oneshot_experiment as mutator
-
+import hobj.benchmarks.generalization.ref.mut_oneshot_experiment as mutator
 
 import hobj.data.depr_behavior.human_data as human_data
 from hobj.statistics.resamplers.resamplers import Resampler
@@ -202,7 +201,7 @@ class MutatorOneshotBenchmark:
         # %% Assemble scores
         ds_scores = xr.Dataset(
             data_vars=dict(
-                MSEn = MSEn_point,
+                MSEn=MSEn_point,
                 perf=hat_prob,
                 perf_by_type=hat_prob.groupby('transformation').mean(),
             ),
@@ -326,7 +325,6 @@ class MutatorOneshotBenchmark:
 
         return ds
 
-
     @property
     def ds_table(self):
 
@@ -340,9 +338,8 @@ class MutatorOneshotBenchmark:
         :return:
         """
         if not hasattr(self, '_ds_table'):
-            self._ds_table = self._process_raw_experiment(da_perf = self.ds_raw.perf)
+            self._ds_table = self._process_raw_experiment(da_perf=self.ds_raw.perf)
         return self._ds_table
-
 
     @property
     def ds_ceilings(self):
@@ -397,22 +394,24 @@ class MutatorOneshotBenchmark:
                 MSEn = R2n_funcs.estimate_MSEn(
                     hat_theta_model=pvec_null,
                     hat_var_hat_theta_model=var_pvec_null,
-                    hat_theta_target = pvec,
+                    hat_theta_target=pvec,
                     condition_dims=('transformation_id',),
                 )
 
-                return  MSEn
+                return MSEn
 
             ds_boot = self.ds_boot
             ds_null = self.ds_null
-            ds_null = ds_null.rename({
-                'k': 'knull',
-                'n': 'nnull',
-                'k_catch': 'k_catch_null',
-                'n_catch': 'n_catch_null',
-                'k_train': 'k_train_null',
-                'n_train': 'n_train_null',
-            })
+            ds_null = ds_null.rename(
+                {
+                    'k': 'knull',
+                    'n': 'nnull',
+                    'k_catch': 'k_catch_null',
+                    'n_catch': 'n_catch_null',
+                    'k_train': 'k_train_null',
+                    'n_train': 'n_train_null',
+                }
+            )
             ds_data = xr.merge([ds_boot, ds_null])
 
             ds_ceilings['MSEn_null'] = approximated_null_distribution.estimate_null_distribution(

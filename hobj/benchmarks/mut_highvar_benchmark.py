@@ -79,7 +79,7 @@ class MutatorHighVarBenchmark(LearningCurveBenchmark):
         )
 
 
-# %%
+# %% todo: move to example
 if __name__ == '__main__':
     benchmark = MutatorHighVarBenchmark()
 
@@ -92,9 +92,20 @@ if __name__ == '__main__':
 
     # %%
     import matplotlib.pyplot as plt
-    glc = benchmark.target_statistics.phat.mean('subtask')
-    glc_sigma = benchmark.target_statistics.boot_phat.mean('subtask').std('boot_iter')
-    x = glc.trial.values + 1
-    plt.errorbar(x, glc, yerr = glc_sigma, marker = '.')
+    target_statistics = benchmark.target_statistics
+
+    def get_glc(statistics):
+        glc = statistics.phat.mean('subtask')
+        glc_sigma = statistics.boot_phat.mean('subtask').std('boot_iter')
+        x = glc.trial.values + 1
+        return x, glc, glc_sigma
+
+
+    x, glc, glc_sigma = get_glc(target_statistics)
+    plt.errorbar(x, glc, yerr = glc_sigma, marker = '.', label = 'human')
+
+    xmod, glcmod, glc_sigmamod = get_glc(result.model_statistics)
+    plt.errorbar(xmod, glcmod, yerr = glc_sigmamod, marker = '.', label = 'model')
+    plt.legend()
     plt.xscale('log')
     plt.show()

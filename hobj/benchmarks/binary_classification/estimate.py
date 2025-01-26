@@ -14,6 +14,7 @@ class LearningCurveStatistics(xr.Dataset):
             subtask_name_to_perf: Dict[str, np.ndarray],  # subtask: [session, trial]
             nbootstrap_samples: int,
     ):
+
         # Ensure rectangular data
         ntrials_observed = set()
         subtask_name_to_nsessions: Dict[str, int] = {}

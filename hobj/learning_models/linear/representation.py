@@ -13,7 +13,7 @@ class RepresentationalModel(ABC):
     Meant to be subclassed (see PrecachedRepresentationalModel below for an example).
     """
 
-    def __init__(self, d:int):
+    def __init__(self, d: int):
         if not isinstance(d, int):
             raise ValueError(f"Expected d to be an int, but got {d} of type {type(d)}")
         if d <= 0:
@@ -55,7 +55,7 @@ class PrecachedRepresentationalModel(RepresentationalModel):
             elif len(f) != d:
                 raise ValueError(f"Features for image {sha256} have dimension {len(f)}, but expected {d}")
 
-        super().__init__(d = d)
+        super().__init__(d=d)
 
     def get_features(self, image: Union[schema.ImageRef, PIL.Image]) -> np.ndarray:
 
