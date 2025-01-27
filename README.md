@@ -4,7 +4,9 @@
 
 This repository contains benchmarks for comparing models of object learning against  measurements of human behavior, from Lee and DiCarlo 2023 (["How well do rudimentary plasticity rules predict adult visual object learning?"](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1011713)).
 
-![Example of human object learning data](site/readme_images/human_learning_curves.svg)
+<div style="text-align: center;">
+  <img src="site/readme_images/human_learning_curves.svg" alt="Alt text" >
+</div>
 
 ### Installation
 This package is supported for Python >=3.11. After cloning `hobj` on your machine, simply navigate to this directory in your shell, then run
