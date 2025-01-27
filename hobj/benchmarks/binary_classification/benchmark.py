@@ -10,7 +10,7 @@ import hobj.data.schema as schema
 from hobj.benchmarks.binary_classification.estimator import LearningCurveStatistics
 from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask, BinaryClassificationSubtaskResult
 from hobj.learning_models import BinaryLearningModel
-from hobj.stats_new.ci import estimate_basic_bootstrap_CI
+from hobj.stats.ci import estimate_basic_bootstrap_CI
 
 
 # %% Models for configuring a LearningCurveBenchmark:

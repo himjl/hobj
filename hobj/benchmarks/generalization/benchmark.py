@@ -9,7 +9,7 @@ from tqdm import tqdm
 from hobj.benchmarks.generalization.estimator import GeneralizationStatistics
 from hobj.benchmarks.generalization.simulator import GeneralizationSubtask, GeneralizationSessionResult
 from hobj.learning_models import BinaryLearningModel
-from hobj.stats_new.ci import estimate_basic_bootstrap_CI
+from hobj.stats.ci import estimate_basic_bootstrap_CI
 
 
 # %% Models for configuring a LearningCurveBenchmark:

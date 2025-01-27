@@ -1,1 +1,1 @@
-from hobj.stats_new.ci import estimate_basic_bootstrap_CI
+from hobj.stats.ci import estimate_basic_bootstrap_CI

@@ -4,7 +4,7 @@ import xarray as xr
 import numpy as np
 from hobj.benchmarks.generalization.simulator import GeneralizationSessionResult
 
-from hobj.stats_new import binomial as binomial_funcs
+from hobj.stats import binomial as binomial_funcs
 import warnings
 
 

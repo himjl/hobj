@@ -5,7 +5,7 @@ import xarray as xr
 
 from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtaskResult
 from dataclasses import dataclass
-from hobj.stats_new import binomial as binomial_funcs
+from hobj.stats import binomial as binomial_funcs
 
 
 # %%
