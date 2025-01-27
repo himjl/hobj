@@ -73,14 +73,29 @@ class LearningCurveBenchmark:
         }
 
         self.subtask_name_to_results: Dict[str, List[BinaryClassificationSubtaskResult]] = {}
+        self._target_data = {}
+
         for name in self.subtask_names:
-            self.subtask_name_to_results[name] = config.subtask_name_to_data[name].results
+            results = config.subtask_name_to_data[name].results
+            self.subtask_name_to_results[name] = results
+
+            self._target_data[name] = {}
+            for result in results:
+                worker_id = result.worker_id
+                if worker_id in self._target_data[name]:
+                    raise ValueError(f"Worker {worker_id} has already been seen for subtask {name}")
+                self._target_data[name][result.worker_id] = list([bool(v) for v in result.perf_seq])
 
         self._target_statistics = LearningCurveStatistics(
             subtask_name_to_results=self.subtask_name_to_results,
             nbootstrap_samples=self.config.num_bootstrap_samples,
             bootstrap_by_worker=self.config.bootstrap_by_worker,
         )
+
+    @property
+    def target_data(self) -> Dict[str, Dict[str, List[bool]]]:
+        return self._target_data
+
 
     @property
     def target_statistics(self) -> LearningCurveStatistics:
