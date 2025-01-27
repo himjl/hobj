@@ -3,13 +3,13 @@ import typing
 import PIL.Image
 import numpy as np
 
-import hobj.learning_models
 from hobj.data import schema as schema
+from hobj.learning_models import BinaryLearningModel
 from hobj.learning_models.linear.representation import RepresentationalModel
 from hobj.learning_models.linear.update_rules import UpdateRule
 
 
-class LinearLearner(hobj.learning_models.BinaryLearningModel):
+class LinearLearner(BinaryLearningModel):
     """
     A learning model based on a standard cognitive theory of learning.
     """
