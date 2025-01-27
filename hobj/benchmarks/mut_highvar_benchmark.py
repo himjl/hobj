@@ -2,7 +2,7 @@ from typing import List, Dict
 import numpy as np
 
 from hobj.benchmarks.binary_classification.benchmark import LearningCurveBenchmark, LearningCurveBenchmarkConfig, TargetSubtaskData
-from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask
+from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask, BinaryClassificationSubtaskResult
 from hobj.data.behavior import load_highvar_behavior
 from hobj.data.images import MutatorHighVarImageset
 
@@ -54,7 +54,12 @@ class MutatorHighVarBenchmark(LearningCurveBenchmark):
                 subtask_name_to_subtask[subtask_name] = subtask
                 subtask_name_to_results[subtask_name] = []
 
-            subtask_name_to_results[subtask_name].append(perf_seq)
+            subtask_name_to_results[subtask_name].append(
+                BinaryClassificationSubtaskResult(
+                    perf_seq = np.array(perf_seq),
+                    worker_id = session.worker_id
+                )
+            )
 
         # Cast as numpy
         for name in subtask_name_to_results:
@@ -72,40 +77,10 @@ class MutatorHighVarBenchmark(LearningCurveBenchmark):
             subtask_name_to_data=subtask_name_to_data,
             num_simulations_per_subtask=500,
             num_bootstrap_samples=1000,
+            bootstrap_by_worker=False,
+            ntrials = 100
         )
 
         super().__init__(
             config=config
         )
-
-
-# %% todo: move to example
-if __name__ == '__main__':
-    benchmark = MutatorHighVarBenchmark()
-
-    from hobj.learning_models import RandomGuesser
-
-    learner = RandomGuesser()
-
-    result = benchmark(learner=learner, show_pbar=True)
-    print(result.msen_CI95)
-
-    # %%
-    import matplotlib.pyplot as plt
-    target_statistics = benchmark.target_statistics
-
-    def get_glc(statistics):
-        glc = statistics.phat.mean('subtask')
-        glc_sigma = statistics.boot_phat.mean('subtask').std('boot_iter')
-        x = glc.trial.values + 1
-        return x, glc, glc_sigma
-
-
-    x, glc, glc_sigma = get_glc(target_statistics)
-    plt.errorbar(x, glc, yerr = glc_sigma, marker = '.', label = 'human')
-
-    xmod, glcmod, glc_sigmamod = get_glc(result.model_statistics)
-    plt.errorbar(xmod, glcmod, yerr = glc_sigmamod, marker = '.', label = 'model')
-    plt.legend()
-    plt.xscale('log')
-    plt.show()

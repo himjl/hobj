@@ -3,6 +3,7 @@ from typing import Union
 from hobj.statistics.variance_estimates import binomial as binomial_funcs
 from dataclasses import dataclass
 
+
 @dataclass
 class CalculateLearningCurveResult:
     phat: np.ndarray # [trial]

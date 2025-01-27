@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Optional
 
 import numpy as np
 import pydantic
@@ -9,6 +9,15 @@ from uuid import uuid4
 
 
 # %%
+class BinaryClassificationSubtaskResult(pydantic.BaseModel):
+    model_config = dict(
+        arbitrary_types_allowed=True
+    )
+
+    perf_seq: np.ndarray
+    worker_id: Optional[str] = pydantic.Field(default="NO_WORKER")
+
+
 class BinaryClassificationSubtask(pydantic.BaseModel):
     """
     A representation of a simple binary classification task which samples uniformly (with or without replacement) from a pool of images.
@@ -39,7 +48,7 @@ class BinaryClassificationSubtask(pydantic.BaseModel):
             self,
             learner: BinaryLearningModel,
             seed: Union[int, None],
-    ) -> np.ndarray:
+    ) -> BinaryClassificationSubtaskResult:
         """
         Convenience method to simulate a session of the binary classification task on a given BinaryLearningModel.
         :param learner:
@@ -86,4 +95,6 @@ class BinaryClassificationSubtask(pydantic.BaseModel):
 
             i_trial += 1
 
-        return perf_seq
+        return BinaryClassificationSubtaskResult(
+            perf_seq=perf_seq,
+        )

@@ -8,16 +8,15 @@ from tqdm import tqdm
 
 import hobj.data.schema as schema
 from hobj.benchmarks.binary_classification.estimator import LearningCurveStatistics
-from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask
+from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask, BinaryClassificationSubtaskResult
 from hobj.learning_models import BinaryLearningModel
 from hobj.stats_new.ci import estimate_basic_bootstrap_CI
 
 
 # %% Models for configuring a LearningCurveBenchmark:
-
 class TargetSubtaskData(pydantic.BaseModel):
     subtask: BinaryClassificationSubtask  # The subtask which generated the associated results
-    results: np.ndarray  # [session, trial] boolean matrix of performance
+    results: List[BinaryClassificationSubtaskResult]  # [session, trial] boolean matrix of performance
 
     model_config = dict(
         arbitrary_types_allowed=True
@@ -26,15 +25,9 @@ class TargetSubtaskData(pydantic.BaseModel):
     @pydantic.model_validator(mode='after')
     def validate_results(self) -> 'TargetSubtaskData':
         # Check shape
-        if len(self.results.shape) != 2:
-            raise ValueError(f"Expected 2D results matrix [session, trial], but got {len(self.results.shape)} dimensions")
-
-        if self.subtask.ntrials != self.results.shape[1]:
-            raise ValueError(f"Expected {self.subtask.ntrials} trials, but got {self.results.shape[1]} trials")
-
-        # Check dtype
-        if self.results.dtype != np.bool:
-            raise ValueError(f"Expected boolean dtype, but got {self.results.dtype}")
+        for result in self.results:
+            if self.subtask.ntrials != len(result.perf_seq):
+                raise ValueError(f"Expected {self.subtask.ntrials} trials, but got {result.perf_seq} trials")
 
         return self
 
@@ -43,6 +36,7 @@ class LearningCurveBenchmarkConfig(pydantic.BaseModel):
     subtask_name_to_data: Dict[str, 'TargetSubtaskData'] = pydantic.Field(default_factory=dict, description="A dictionary of subtask_name -> TargetSubtaskConfig")
     num_simulations_per_subtask: int = pydantic.Field(ge=2)
     num_bootstrap_samples: int = pydantic.Field(ge=2)
+    bootstrap_by_worker: bool
     ntrials: Optional[int] = pydantic.Field(default=None)
 
     @pydantic.model_validator(mode='after')
@@ -66,46 +60,6 @@ class LearningCurveBenchmarkConfig(pydantic.BaseModel):
 # %%
 class LearningCurveBenchmark:
 
-    @property
-    def image_refs(self) -> Iterator[schema.ImageRef]:
-        """
-        Returns all image references used in the benchmark.
-        :return:
-        """
-        for subtask in self.subtask_name_to_subtask.values():
-            for ref in subtask.classA + subtask.classB:
-                yield ref
-
-    @staticmethod
-    def simulate_model_behavior(
-            subtask: BinaryClassificationSubtask,
-            learner: BinaryLearningModel,
-            nsimulations: int,
-    ) -> np.ndarray:
-        """
-        Returns a [nsimulations, ntrials] matrix of model performance on the subtask.
-        :param subtask:
-        :param learner:
-        :param nsimulations:
-        :return: a [nsimulations, ntrials] matrix of model performance on the subtask.
-        """
-
-        # Instantiate array to store performance sequences for this subtask:
-        perf_mat = np.zeros((nsimulations, subtask.ntrials), dtype=np.bool)
-
-        # Perform simulations for this subtask:
-        for i_simulation in range(nsimulations):
-            # Reset learner internal state
-            learner.reset_state(seed=None)
-
-            # Simulate session:
-            perf_mat[i_simulation, :] = subtask.simulate_session(
-                learner=learner,
-                seed=None,
-            )
-
-        return perf_mat
-
     def __init__(
             self,
             config: LearningCurveBenchmarkConfig,
@@ -118,22 +72,15 @@ class LearningCurveBenchmark:
             name: config.subtask_name_to_data[name].subtask for name in self.subtask_names
         }
 
-        self.subtask_name_to_perf: Dict[str, np.ndarray] = {}
+        self.subtask_name_to_results: Dict[str, List[BinaryClassificationSubtaskResult]] = {}
         for name in self.subtask_names:
-            self.subtask_name_to_perf[name] = config.subtask_name_to_data[name].results
+            self.subtask_name_to_results[name] = config.subtask_name_to_data[name].results
 
         self._target_statistics = LearningCurveStatistics(
-            subtask_name_to_perf=self.subtask_name_to_perf,
+            subtask_name_to_results=self.subtask_name_to_results,
             nbootstrap_samples=self.config.num_bootstrap_samples,
+            bootstrap_by_worker=self.config.bootstrap_by_worker,
         )
-
-    @property
-    def target_data(self) -> Dict[str, np.ndarray]:
-        """
-        Returns the target data for the benchmark, which is a dictionary of subtask_name -> [session, trial] boolean matrix of performance.
-        :return:
-        """
-        return self.subtask_name_to_perf
 
     @property
     def target_statistics(self) -> LearningCurveStatistics:
@@ -164,21 +111,22 @@ class LearningCurveBenchmark:
         """
 
         # Get model learning curve statistics:
-        subtask_name_to_model_perfs: Dict[str, np.ndarray] = {}
+        subtask_name_to_model_results: Dict[str, List[BinaryClassificationSubtaskResult]] = {}
         for i_subtask, subtask_name in enumerate(tqdm(self.subtask_names, desc='Subtask simulations:', disable=not show_pbar)):
             # Get [simulation, trial] boolean performance matrix for the model
-            perf_matrix = self.simulate_model_behavior(
+            subtask_results = self.simulate_model_behavior(
                 subtask=self.subtask_name_to_subtask[subtask_name],
                 learner=learner,
                 nsimulations=self.config.num_simulations_per_subtask,
             )
 
-            subtask_name_to_model_perfs[subtask_name] = perf_matrix
+            subtask_name_to_model_results[subtask_name] = subtask_results
 
         # Assemble into a single matrix
         model_statistics = LearningCurveStatistics(
-            subtask_name_to_perf=subtask_name_to_model_perfs,
+            subtask_name_to_results=subtask_name_to_model_results,
             nbootstrap_samples=self.config.num_bootstrap_samples,
+            bootstrap_by_worker=False,
         )
 
         # Calculate comparison statistics between target and model learning curves:
@@ -217,6 +165,37 @@ class LearningCurveBenchmark:
             model_statistics=model_statistics,
             lapse_rate=lapse_rate,
         )
+
+    @staticmethod
+    def simulate_model_behavior(
+            subtask: BinaryClassificationSubtask,
+            learner: BinaryLearningModel,
+            nsimulations: int,
+    ) -> List[BinaryClassificationSubtaskResult]:
+        """
+        Returns a [nsimulations, ntrials] matrix of model performance on the subtask.
+        :param subtask:
+        :param learner:
+        :param nsimulations:
+        :return: a [nsimulations, ntrials] matrix of model performance on the subtask.
+        """
+
+        results = []
+
+        # Perform simulations for this subtask:
+        for i_simulation in range(nsimulations):
+            # Reset learner internal state
+            learner.reset_state(seed=None)
+
+            # Simulate session:
+            results.append(
+                subtask.simulate_session(
+                    learner=learner,
+                    seed=None,
+                )
+            )
+
+        return results
 
     @classmethod
     def _compare_learning_curves(

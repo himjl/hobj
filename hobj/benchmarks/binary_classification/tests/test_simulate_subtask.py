@@ -1,4 +1,4 @@
-from hobj.benchmarks.binary_classification.task import BinaryClassificationSubtask
+from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask
 from hobj.learning_models import RandomGuesser
 from hobj.data.schema import ImageRef
 from typing import List
@@ -20,20 +20,23 @@ def create_image_refs(nimages_per_class: int, seed: int) -> List[ImageRef]:
 
 def test_simulate_subtask():
     nimages_per_class = 10
+    ntrials = nimages_per_class * 2
 
     subtask = BinaryClassificationSubtask(
         classA=create_image_refs(nimages_per_class=10, seed=0),
         classB=create_image_refs(nimages_per_class=10, seed=1),
-        ntrials=nimages_per_class * 2,
+        ntrials=ntrials,
         replace=False,
     )
 
     learner = RandomGuesser(seed=0)
 
-    perf_seq = subtask.simulate_session(
+    result = subtask.simulate_session(
         learner=learner,
         seed=0
     )
+
+    assert len(result.perf_seq) == ntrials
 
 
 # Todo: test deterministic
