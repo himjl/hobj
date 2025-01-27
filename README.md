@@ -28,14 +28,14 @@ result = benchmark(model)
 print(result.msen, result.msen_CI95)
 ```
 
+For more details, check out `examples/`.
 
 ### Installation
+
 The `hobj` package works for Python >=3.11. After cloning this repository on your machine, navigate to this directory in your shell and run:
 
 ``` pip install -e .```
 
-To see how to view behavioral data and/or score an example learning model, check out `examples/`.
-
 
 ### Changes to codebase since publication
-This codebase was refactored in 2025, improving the performance and quality of the code, as well as introducing changes to the statistics (see [changelist](site/changelist.md)). To see the codebase that reflects its contents at the time of publication, check out the repo with the `v1` tag.
+This codebase was refactored in January 2025 to improve the performance and quality of the code, and is now designated as `v2`. Along the way, minor refinements to the statistical analysis of the original codebase were introduced (see [changelist](site/changelist.md)). To see the codebase at the time of publication, check out the repo with the `v1` tag [here](https://github.com/himjl/hobj/releases/tag/v1).
