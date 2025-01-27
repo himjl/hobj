@@ -29,7 +29,6 @@ class GeneralizationStatistics(xr.Dataset):
 
         # Get all workers
         all_workers = sorted({result.worker_id for result in results})
-        print(len(all_workers))
         nworkers = len(all_workers)
         worker_to_i = {worker: i for i, worker in enumerate(all_workers)}
 
@@ -65,8 +64,6 @@ class GeneralizationStatistics(xr.Dataset):
                 nmat[i, i_transformation] += n
 
         # Calculate statistics
-        print(kmat.sum(0))
-        print(nmat.sum(0))
         phat, varhat_phat = self._get_point_estimates(
             k=kmat.sum(0),
             n=nmat.sum(0),
