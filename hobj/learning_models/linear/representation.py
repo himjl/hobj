@@ -34,4 +34,3 @@ class RepresentationalModel(ABC):
         :return: np.ndarray, shape=(d,)
         """
         return np.zeros(self.d)
-
