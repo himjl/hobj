@@ -1,5 +1,5 @@
 from hobj.benchmarks.binary_classification.task import BinaryClassificationSubtask
-from hobj.learning_models import DummyBinaryLearner
+from hobj.learning_models import RandomGuesser
 from hobj.data.schema import ImageRef
 from typing import List
 import pytest
@@ -28,7 +28,7 @@ def test_simulate_subtask():
         replace=False,
     )
 
-    learner = DummyBinaryLearner(seed=0)
+    learner = RandomGuesser(seed=0)
 
     perf_seq = subtask.simulate_session(
         learner=learner,

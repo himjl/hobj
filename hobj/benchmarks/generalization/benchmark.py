@@ -6,9 +6,8 @@ import pydantic
 import xarray as xr
 from tqdm import tqdm
 
-import hobj.data.schema as schema
-from hobj.benchmarks.generalization.estimate import GeneralizationStatistics
-from hobj.benchmarks.generalization.task import GeneralizationSubtask, GeneralizationSessionResult
+from hobj.benchmarks.generalization.estimator import GeneralizationStatistics
+from hobj.benchmarks.generalization.simulator import GeneralizationSubtask, GeneralizationSessionResult
 from hobj.learning_models import BinaryLearningModel
 from hobj.stats_new.ci import estimate_basic_bootstrap_CI
 
@@ -19,6 +18,7 @@ class GeneralizationBenchmarkConfig(pydantic.BaseModel):
     results: List[GeneralizationSessionResult]
     num_simulations_per_subtask: int = pydantic.Field(ge=2)
     num_bootstrap_samples: int = pydantic.Field(ge=2)
+    bootstrap_target_by_worker: bool
 
 
 # %%
@@ -30,9 +30,10 @@ class GeneralizationBenchmark:
     ):
         self.config = config
         self._generalization_statistics = GeneralizationStatistics(
-            results = self.config.results,
+            results=self.config.results,
             perform_lapse_rate_correction=True,
-            n_bootstrap_iterations=self.config.num_bootstrap_samples
+            n_bootstrap_iterations=self.config.num_bootstrap_samples,
+            bootstrap_by_worker=self.config.bootstrap_target_by_worker,
         )
 
     @property
@@ -76,7 +77,11 @@ class GeneralizationBenchmark:
             results=results,
             perform_lapse_rate_correction=False,
             n_bootstrap_iterations=self.config.num_bootstrap_samples,
+            bootstrap_by_worker=False, # bootstrap simulations
         )
+
+        # Get target transformation
+        model_statistics = model_statistics.sel(transformation = self.target_statistics.transformation)
 
         # Calculate comparison statistics between target and model learning curves:
         msen_point = self._compare_generalization_patterns(
@@ -133,11 +138,9 @@ class GeneralizationBenchmark:
             learner.reset_state(seed=None)
 
             # Simulate session:
-            results.append(subtask.simulate_session(learner=learner,seed=None,))
+            results.append(subtask.simulate_session(learner=learner, seed=None, ))
 
         return results
-
-
 
     @classmethod
     def _compare_generalization_patterns(

@@ -40,7 +40,7 @@ class BinaryLearningModel(ABC):
 
 
 # %%
-class DummyBinaryLearner(BinaryLearningModel):
+class RandomGuesser(BinaryLearningModel):
     """
     A dummy model which simply returns random outputs, independent of the given image.
     """

@@ -1,8 +1,8 @@
 from typing import List, Dict
 import numpy as np
 
-from hobj.benchmarks.binary_classification.scoring import LearningCurveBenchmark, LearningCurveBenchmarkConfig, TargetSubtaskData
-from hobj.benchmarks.binary_classification.task import BinaryClassificationSubtask
+from hobj.benchmarks.binary_classification.benchmark import LearningCurveBenchmark, LearningCurveBenchmarkConfig, TargetSubtaskData
+from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask
 from hobj.data.behavior import load_highvar_behavior
 from hobj.data.images import MutatorHighVarImageset
 
@@ -83,9 +83,9 @@ class MutatorHighVarBenchmark(LearningCurveBenchmark):
 if __name__ == '__main__':
     benchmark = MutatorHighVarBenchmark()
 
-    from hobj.learning_models import DummyBinaryLearner
+    from hobj.learning_models import RandomGuesser
 
-    learner = DummyBinaryLearner()
+    learner = RandomGuesser()
 
     result = benchmark(learner=learner, show_pbar=True)
     print(result.msen_CI95)

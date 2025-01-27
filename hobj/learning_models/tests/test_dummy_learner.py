@@ -1,10 +1,10 @@
 import pytest
-from hobj.learning_models import DummyBinaryLearner
+from hobj.learning_models import RandomGuesser
 import hobj.data.schema as schema
 
 @pytest.fixture
-def dummy_learner() -> DummyBinaryLearner:
-    return DummyBinaryLearner(seed=0)
+def dummy_learner() -> RandomGuesser:
+    return RandomGuesser(seed=0)
 
 @pytest.fixture
 def test_image() -> schema.ImageRef:

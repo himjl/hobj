@@ -2,9 +2,10 @@ from typing import Dict, Set, List
 
 import xarray as xr
 import numpy as np
-from hobj.benchmarks.generalization.task import GeneralizationSessionResult
+from hobj.benchmarks.generalization.simulator import GeneralizationSessionResult
 
 from hobj.statistics.variance_estimates import binomial as binomial_funcs
+import warnings
 
 
 class GeneralizationStatistics(xr.Dataset):
@@ -15,6 +16,7 @@ class GeneralizationStatistics(xr.Dataset):
             results: List[GeneralizationSessionResult],
             perform_lapse_rate_correction: bool,
             n_bootstrap_iterations: int,
+            bootstrap_by_worker: bool, # versus by session
     ):
 
         # Get all transformations
@@ -25,44 +27,71 @@ class GeneralizationStatistics(xr.Dataset):
         all_transformations = sorted(all_transformations)
         transformation_to_i = {transformation: i for i, transformation in enumerate(all_transformations)}
 
+        # Get all workers
+        all_workers = sorted({result.worker_id for result in results})
+        print(len(all_workers))
+        nworkers = len(all_workers)
+        worker_to_i = {worker: i for i, worker in enumerate(all_workers)}
+
         # Package data into [session, transformation] kn matrices
         nsessions = len(results)
         ntransformations = len(all_transformations)
-        k = np.zeros(shape=(nsessions, ntransformations))
-        n = np.zeros(shape=(nsessions, ntransformations))
-        kcatch = np.zeros(shape = nsessions)
-        ncatch = np.zeros(shape = nsessions)
+
+        if bootstrap_by_worker:
+            if nworkers == 1:
+                raise ValueError(f"Only one worker {all_workers}, cannot perform valid bootstrap by worker.")
+            elif nworkers < 20:
+                warnings.warn(f"Only {nworkers} unique workers, which is less than 20. Bootstrapping by worker may not be reliable.")
+
+            kmat = np.zeros(shape=(nworkers, ntransformations))
+            nmat = np.zeros(shape=(nworkers, ntransformations))
+            kcatch = np.zeros(shape=nworkers)
+            ncatch = np.zeros(shape=nworkers)
+        else:
+            # Will be bootstrapping by session
+            kmat = np.zeros(shape=(nsessions, ntransformations))
+            nmat = np.zeros(shape=(nsessions, ntransformations))
+            kcatch = np.zeros(shape=nsessions)
+            ncatch = np.zeros(shape=nsessions)
 
         for i_session, result in enumerate(results):
-            kcatch[i_session] = result.kcatch
-            ncatch[i_session] = result.ncatch
+            i = worker_to_i[result.worker_id] if bootstrap_by_worker else i_session
+            kcatch[i] = result.kcatch
+            ncatch[i] = result.ncatch
 
             for transformation, (k, n) in result.transformation_to_kn.items():
                 i_transformation = transformation_to_i[transformation]
-                k[i_session, i_transformation] = k
-                n[i_session, i_transformation] = n
+                kmat[i, i_transformation] += k
+                nmat[i, i_transformation] += n
 
         # Calculate statistics
+        print(kmat.sum(0))
+        print(nmat.sum(0))
         phat, varhat_phat = self._get_point_estimates(
-            k = k.sum(0),
-            n = n.sum(0),
-            kcatch = kcatch.sum(),
-            ncatch = ncatch.sum(),
-            perform_lapse_rate_correction = perform_lapse_rate_correction,
+            k=kmat.sum(0),
+            n=nmat.sum(0),
+            kcatch=kcatch.sum(),
+            ncatch=ncatch.sum(),
+            perform_lapse_rate_correction=perform_lapse_rate_correction,
         )
 
-        # Compute bootstrap replicates by resampling sessions
+        # Compute bootstrap replicates by resampling sessions or workers
         gen = np.random.default_rng()
         boot_phat = np.zeros(shape=(n_bootstrap_iterations, ntransformations))
         boot_varhat_phat = np.zeros(shape=(n_bootstrap_iterations, ntransformations))
+
         for i_boot_iter in range(n_bootstrap_iterations):
 
-            # Resample sessions
-            i_boot_sessions = gen.integers(low = 0, high = nsessions, size = nsessions)
-            kboot = k[i_boot_sessions].sum(0)
-            nboot = n[i_boot_sessions].sum(0)
-            kcatch_boot = kcatch[i_boot_sessions].sum()
-            ncatch_boot = ncatch[i_boot_sessions].sum()
+            if bootstrap_by_worker:
+                # Resample by worker
+                i_boot = gen.integers(low=0, high=nworkers, size=nworkers)
+            else:
+                # Resample by session
+                i_boot = gen.integers(low=0, high=nsessions, size=nsessions)
+            kboot = kmat[i_boot].sum(0)
+            nboot = nmat[i_boot].sum(0)
+            kcatch_boot = kcatch[i_boot].sum()
+            ncatch_boot = ncatch[i_boot].sum()
 
             # Compute bootstrapped point estimates
             phat_cur, varhat_phat_cur = self._get_point_estimates(
@@ -84,14 +113,17 @@ class GeneralizationStatistics(xr.Dataset):
                 boot_phat=(['boot_iter', 'transformation'], boot_phat),
                 boot_varhat_phat=(['boot_iter', 'transformation'], boot_varhat_phat),
             ),
+            coords=dict(
+                transformation=all_transformations
+            )
         )
 
     @staticmethod
     def _get_point_estimates(
-            k: np.ndarray, # [transformation]
-            n: np.ndarray, # [transformation]
-            kcatch: np.ndarray, # ()
-            ncatch: np.ndarray, # ()
+            k: np.ndarray,  # [transformation]
+            n: np.ndarray,  # [transformation]
+            kcatch: np.ndarray,  # ()
+            ncatch: np.ndarray,  # ()
             perform_lapse_rate_correction: bool,
     ):
 
@@ -107,9 +139,8 @@ class GeneralizationStatistics(xr.Dataset):
             phat = (phat - hat_lapse_rate / 2) / (1 - hat_lapse_rate)
 
             # Estimate the variance of the corrected performance by treating the lapse rate as a constant:
-            varhat_phat = varhat_phat / (1 - hat_lapse_rate)**2
+            varhat_phat = varhat_phat / (1 - hat_lapse_rate) ** 2
 
         phat = np.clip(phat, 0, 1)
 
         return phat, varhat_phat
-
