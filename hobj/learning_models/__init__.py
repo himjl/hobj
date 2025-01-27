@@ -6,6 +6,7 @@ import numpy as np
 
 from hobj.data import schema as schema
 
+
 # %%
 class BinaryLearningModel(ABC):
 
