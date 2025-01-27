@@ -35,32 +35,3 @@ class RepresentationalModel(ABC):
         """
         return np.zeros(self.d)
 
-
-class PrecachedRepresentationalModel(RepresentationalModel):
-
-    def __init__(
-            self,
-            image_sha256_to_features: Dict[str, np.ndarray]
-    ):
-        self.image_sha256_to_features = image_sha256_to_features
-
-        # Check that the features are all of the same dimension
-        d = None
-        for sha256, f in image_sha256_to_features.items():
-            if not len(f.shape) == 1:
-                raise ValueError(f"Features for image {sha256} have shape {f.shape}, but expected a 1D array")
-
-            if d is None:
-                d = len(f)
-            elif len(f) != d:
-                raise ValueError(f"Features for image {sha256} have dimension {len(f)}, but expected {d}")
-
-        super().__init__(d=d)
-
-    def get_features(self, image: Union[schema.ImageRef, PIL.Image]) -> np.ndarray:
-
-        if isinstance(image, PIL.Image.Image):
-            image = schema.ImageRef.from_image(image)
-
-        sha256 = image.sha256
-        return self.image_sha256_to_features[sha256]
