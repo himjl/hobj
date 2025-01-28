@@ -7,9 +7,8 @@ on:
       - hobj/**
       # Changes to workflows
       - .github/workflows/ci.yml
-      # Changes to setup.py and requirements.txt
-      - 'setup.py'
-      - 'requirements.txt'
+      # Changes to pyproject.toml
+      - 'pyproject.toml'
 jobs:
   unit_tests:
     runs-on: ubuntu-latest
