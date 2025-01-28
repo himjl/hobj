@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]  # Add build dependencies
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hobj"
+version = "2.0.0"
+description = "Human object learning benchmarks"
+authors = [
+    { name = "Michael J. Lee", email = "mil@mit.edu" }
+]
+license = { file = "license.md" }
+readme = "README.md"
+requires-python = ">=3.11"
+
+# Dependencies from requirements.txt
+dependencies = [
+    "numpy>=2.2",
+    "pandas>=2.2",
+    "matplotlib>=3.9",
+    "requests>=2.32",
+    "tqdm>=4.67",
+    "pydantic>=2.10",
+    "xarray>=2025.1"
+]
+
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+]
+
+[project.urls]
+repository = "https://github.com/himjl/hobj"
+
+[tool.setuptools]
+packages = ["hobj"]
