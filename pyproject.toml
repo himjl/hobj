@@ -21,13 +21,8 @@ dependencies = [
     "requests>=2.32",
     "tqdm>=4.67",
     "pydantic>=2.10",
-    "xarray>=2025.1"
-]
-
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.3",
+    "xarray>=2025.1",
+    "pytest>=8.3"
 ]
 
 [project.urls]
