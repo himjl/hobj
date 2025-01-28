@@ -30,3 +30,4 @@ repository = "https://github.com/himjl/hobj"
 
 [tool.setuptools.packages.find]
 where = ["."]
+namespaces = false
