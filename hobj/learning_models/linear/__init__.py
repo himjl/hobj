@@ -10,10 +10,6 @@ from hobj.learning_models.linear.update_rules import UpdateRule
 
 
 class LinearLearner(BinaryLearningModel):
-    """
-    A learning model based on a standard cognitive theory of learning.
-    """
-
     def __init__(
             self,
             representational_model: RepresentationalModel,
