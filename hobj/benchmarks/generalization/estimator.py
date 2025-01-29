@@ -1,11 +1,10 @@
+import numpy as np
+import warnings
+import xarray as xr
 from typing import List
 
-import xarray as xr
-import numpy as np
 from hobj.benchmarks.generalization.simulator import GeneralizationSessionResult
-
 from hobj.stats import binomial as binomial_funcs
-import warnings
 
 
 class GeneralizationStatistics(xr.Dataset):

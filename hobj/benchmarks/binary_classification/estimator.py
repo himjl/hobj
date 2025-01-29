@@ -1,10 +1,9 @@
-from typing import List, Dict, Tuple
-
 import numpy as np
 import xarray as xr
+from dataclasses import dataclass
+from typing import List, Dict, Tuple
 
 from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtaskResult
-from dataclasses import dataclass
 from hobj.stats import binomial as binomial_funcs
 
 

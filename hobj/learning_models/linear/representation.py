@@ -1,9 +1,10 @@
 import numpy as np
 
-import hobj.data.schema as schema
 from typing import Union, Dict, Callable, List
 import PIL.Image
-from tqdm import tqdm
+
+import mref.media_references
+
 
 class RepresentationalModel:
     """
@@ -13,7 +14,7 @@ class RepresentationalModel:
     def __init__(
             self,
             d: int,
-            image_to_features_func: Callable[[schema.ImageRef], np.ndarray],
+            image_to_features_func: Callable[[Union[mref.media_references.ImageRef, PIL.Image]], np.ndarray],
     ):
 
         if not isinstance(d, int):
@@ -31,7 +32,7 @@ class RepresentationalModel:
 
     def get_features(
             self,
-            image: Union[schema.ImageRef, PIL.Image]
+            image: Union[mref.media_references.ImageRef, PIL.Image]
     ) -> np.ndarray:
         """
         Returns a feature vector for the image_url.
@@ -40,9 +41,6 @@ class RepresentationalModel:
         :param image: schema.ImageRef or PIL.Image
         :return: np.ndarray, shape=(d,)
         """
-
-        if isinstance(image, PIL.Image.Image):
-            image = schema.ImageRef.from_image(image=image)
 
         f = self._image_to_features_func(image)
 
@@ -54,7 +52,7 @@ class RepresentationalModel:
     @classmethod
     def from_precomputed_features(
             cls,
-            image_ref_to_features: Dict[schema.ImageRef, np.ndarray]
+            image_ref_to_features: Dict[mref.media_references.ImageRef, np.ndarray]
     ) -> 'RepresentationalModel':
 
         """

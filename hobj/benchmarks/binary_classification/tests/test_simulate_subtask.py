@@ -1,6 +1,6 @@
 from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask
 from hobj.learning_models import RandomGuesser
-from hobj.data.schema import ImageRef
+from mref import ImageRef
 from typing import List
 import pytest
 import PIL.Image

@@ -1,16 +1,13 @@
 import collections
-
 # Coercing human data
-from typing import Dict, Set, Optional, List
-from hobj.data.behavior import load_oneshot_behavior
-from hobj.data.images import MutatorOneShotImageset
-from hobj.data.schema import ImageRef
-import matplotlib.pyplot as plt
-import pandas as pd
-from hobj.benchmarks.generalization.benchmark import GeneralizationBenchmarkConfig, GeneralizationBenchmark
-from hobj.benchmarks.generalization.benchmark import GeneralizationSessionResult
+from typing import Dict, List
+
+from hobj.benchmarks.generalization.benchmark import GeneralizationBenchmarkConfig, GeneralizationBenchmark, GeneralizationSessionResult
 from hobj.benchmarks.generalization.estimator import GeneralizationStatistics
 from hobj.benchmarks.generalization.simulator import GeneralizationSubtask
+from hobj.data.behavior import load_oneshot_behavior
+from hobj.data.images import MutatorOneShotImageset
+from mref import ImageRef
 
 
 # %%

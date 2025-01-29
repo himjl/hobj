@@ -48,3 +48,6 @@ class MutatorOneShotImageset(Imageset[MutatorOneShotAnnotation]):
     zipped_images_url = 'https://hlbdatasets.s3.us-east-1.amazonaws.com/imagesets/mutator-oneshot/MutatorB2000_Oneshot64.zip'
     annotation_schema = MutatorOneShotAnnotation
 
+
+if __name__ == '__main__':
+    imageset = MutatorOneShotImageset()

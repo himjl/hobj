@@ -1,10 +1,9 @@
-
+import mref.media_references
 from hobj.data.images.template import Imageset, ImageManifestEntry, ImageManifest
 import pydantic
 
 from typing import Dict, List
 
-import hobj.data.schema as schema
 
 
 class MutatorHighVarAnnotation(pydantic.BaseModel):
@@ -25,7 +24,7 @@ class MutatorHighVarImageset(Imageset[MutatorHighVarAnnotation]):
     def __init__(self):
         super().__init__()
 
-        self._category_to_image_refs: Dict[str, List[schema.ImageRef]] = {}
+        self._category_to_image_refs: Dict[str, List[mref.media_references.ImageRef]] = {}
 
         for ref in self.image_refs:
             annotation = self.get_annotation(image_ref=ref)
@@ -38,7 +37,7 @@ class MutatorHighVarImageset(Imageset[MutatorHighVarAnnotation]):
             self._category_to_image_refs[category] = sorted(self._category_to_image_refs[category])
 
     @property
-    def category_to_image_refs(self) -> Dict[str, List[schema.ImageRef]]:
+    def category_to_image_refs(self) -> Dict[str, List[mref.media_references.ImageRef]]:
         return self._category_to_image_refs
 
 

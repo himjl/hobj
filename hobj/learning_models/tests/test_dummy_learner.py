@@ -1,14 +1,15 @@
 import pytest
+
+import mref.media_references
 from hobj.learning_models import RandomGuesser
-import hobj.data.schema as schema
 
 @pytest.fixture
 def dummy_learner() -> RandomGuesser:
     return RandomGuesser(seed=0)
 
 @pytest.fixture
-def test_image() -> schema.ImageRef:
-    return schema.ImageRef(sha256='0'*64)
+def test_image() -> mref.media_references.ImageRef:
+    return mref.media_references.ImageRef(sha256='0' * 64)
 
 
 def test_dummy_learner_deterministic(dummy_learner, test_image):

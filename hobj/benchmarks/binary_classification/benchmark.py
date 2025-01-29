@@ -1,12 +1,10 @@
-from dataclasses import dataclass
-from typing import List, Dict, Union, Tuple, Optional, Iterator
-
 import numpy as np
 import pydantic
 import xarray as xr
+from dataclasses import dataclass
 from tqdm import tqdm
+from typing import List, Dict, Union, Tuple, Optional
 
-import hobj.data.schema as schema
 from hobj.benchmarks.binary_classification.estimator import LearningCurveStatistics
 from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask, BinaryClassificationSubtaskResult
 from hobj.learning_models import BinaryLearningModel

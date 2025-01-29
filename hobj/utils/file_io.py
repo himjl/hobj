@@ -38,7 +38,7 @@ def download_file(url: str, output_path: Path) -> None:
         output_path.parent.mkdir(parents=True)
 
     size, unit = get_bytes_size(num_bytes=total_size_in_bytes)
-    # Create a progress bar
+
     with tqdm(total=size, unit=unit, unit_scale=True, disable=False, desc='Download progress') as progress_bar:
         with open(output_path.as_posix(), 'wb') as file:
             # Iterate over the response data in chunks and write to file
@@ -47,7 +47,7 @@ def download_file(url: str, output_path: Path) -> None:
                     file.write(chunk)
                     chunk_size, _ = get_bytes_size(num_bytes=len(chunk), output_units=unit)
                     progress_bar.update(chunk_size)
-
+            file.flush()
 
 
 def get_bytes_size(num_bytes: int, output_units: str = None) -> (float, str):
