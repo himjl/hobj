@@ -3,7 +3,7 @@ import numpy as np
 from typing import Union, Dict, Callable, List
 import PIL.Image
 
-import mref.media_references
+from mref import ImageRef
 
 
 class RepresentationalModel:
@@ -14,7 +14,7 @@ class RepresentationalModel:
     def __init__(
             self,
             d: int,
-            image_to_features_func: Callable[[Union[mref.media_references.ImageRef, PIL.Image]], np.ndarray],
+            image_to_features_func: Callable[[Union[ImageRef, PIL.Image]], np.ndarray],
     ):
 
         if not isinstance(d, int):
@@ -32,7 +32,7 @@ class RepresentationalModel:
 
     def get_features(
             self,
-            image: Union[mref.media_references.ImageRef, PIL.Image]
+            image: Union[ImageRef, PIL.Image]
     ) -> np.ndarray:
         """
         Returns a feature vector for the image_url.
@@ -52,7 +52,7 @@ class RepresentationalModel:
     @classmethod
     def from_precomputed_features(
             cls,
-            image_ref_to_features: Dict[mref.media_references.ImageRef, np.ndarray]
+            image_ref_to_features: Dict[ImageRef, np.ndarray]
     ) -> 'RepresentationalModel':
 
         """
@@ -60,4 +60,27 @@ class RepresentationalModel:
 
         If get_features is called with an ImageRef (or PIL.Image with an ImageRef) not in image_ref_to_features, a KeyError will be raised.
         """
-        raise NotImplementedError
+
+        def image_to_features_func(image: Union[ImageRef, PIL.Image]) -> np.ndarray:
+            if isinstance(image, PIL.Image.Image):
+                ref = ImageRef.from_image(image)
+            else:
+                ref = image
+            return image_ref_to_features[ref]
+
+        # Ensure all feature vectors are the same shape
+        d = None
+        for ref in image_ref_to_features:
+            f = image_ref_to_features[ref]
+            if not isinstance(f, np.ndarray):
+                raise ValueError(f"Expected feature vector to be a np.ndarray, but got {f} of type {type(f)}")
+            if not len(f.shape) == 1:
+                raise ValueError(f"Expected feature vector to be 1D, but got {f.shape}")
+
+            if d is None:
+                d = f.shape[0]
+
+            if not f.shape[0] == d:
+                raise ValueError(f"Expected feature vector to be of shape ({d},), but got {f.shape}")
+
+        return cls(d=d, image_to_features_func=image_to_features_func)
