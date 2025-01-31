@@ -4,7 +4,7 @@ from typing import List, Set, Union, Dict, Optional
 import numpy as np
 import pydantic
 
-from hobj.data.schema import ImageRef
+from mref import ImageRef
 from hobj.learning_models import BinaryLearningModel
 import collections
 

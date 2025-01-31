@@ -1,31 +1,39 @@
 import numpy as np
 import scipy.special
+from abc import ABC, abstractmethod
+from typing import Tuple, Union
 
 
-class UpdateRule(object):
+class UpdateRule(ABC):
     def __init__(self, alpha: float):
         """
         Implements an update rule for a linear learner. Assumes that all features have at most norm 1.
         :param alpha: the normalized learning rate. Between 0 and 1.
         """
-        assert 0 <= alpha <= 1
+        if not 0 <= alpha <= 1:
+            raise ValueError("alpha must be in the interval [0, 1]")
+
         self.alpha = alpha
-        self._update_rule_id = None
         self.reset()
         return
 
-    def reset(self):
+    def reset(self) -> None:
         """
-        Resets the update rule to its initial state. Not used by all update rules.
+        Called to reset the update rule to some initial state. Not used by all update rules.
         :return:
         """
         return
 
-    @property
-    def update_rule_id(self):
-        return str(self.__class__.__name__) + '_%0.3e' % (self.alpha)
-
-    def get_update(self, x: np.ndarray, w: np.ndarray, b: np.ndarray, logits: np.ndarray, action: int, reward: float):
+    @abstractmethod
+    def get_update(
+            self,
+            x: np.ndarray,
+            w: np.ndarray,
+            b: Union[np.ndarray, np.generic, float],
+            logits: np.ndarray,
+            action: int,
+            reward: float
+    ) -> Tuple[np.ndarray, Union[np.ndarray, np.generic, float]]:
         """
         Returns delta_w and delta_b, where
         w{t+1} = w{t} + delta_w
@@ -37,7 +45,7 @@ class UpdateRule(object):
         :param logits: np.ndarray, shape=(action,)
         :param action: int, action taken by the learner
         :param reward: float, reward received by the learner
-        :return: delta, np.ndarray, shape=(actions)
+        :return: delta_w, delta_b, which are np.ndarrays of the same shape as w and b, respectively.
         """
         delta_w = np.zeros(w.shape)
         delta_b = np.zeros(b.shape)
@@ -52,20 +60,15 @@ class Prototype(UpdateRule):
     def reset(self):
         self.ncounts = None
 
-    def get_update(self, x: np.ndarray, w: np.ndarray, b: np.ndarray, logits: np.ndarray, action: int, reward: float):
-        """
-        Returns delta_w and delta_b, where
-        w{t+1} = w{t} + delta_w
-        b{t+1} = b{t} + delta_b
-
-        :param x: np.ndarray, shape=(d)
-        :param w: np.ndarray, shape=(d, actions)
-        :param b: np.ndarray, shape=(actions,)
-        :param logits: np.ndarray, shape=(action,)
-        :param action: int, action taken by the learner
-        :param reward: float, reward received by the learner
-        :return: delta, np.ndarray, shape=(actions)
-        """
+    def get_update(
+            self,
+            x: np.ndarray,
+            w: np.ndarray,
+            b: Union[np.ndarray, np.generic, float],
+            logits: np.ndarray,
+            action: int,
+            reward: float
+    ) -> Tuple[np.ndarray, Union[np.ndarray, np.generic, float]]:
         if self.ncounts is None:
             self.ncounts = np.zeros(w.shape[1])
 
@@ -77,7 +80,7 @@ class Prototype(UpdateRule):
             if w.shape[1] == 2:
                 i_updated_class = 1 - action
             else:
-                return 0, 0
+                return np.zeros_like(w), 0
 
         mu_cur = w[:, i_updated_class]
         n = self.ncounts[i_updated_class]
@@ -95,20 +98,15 @@ class Prototype(UpdateRule):
 
 class Square(UpdateRule):
 
-    def get_update(self, x: np.ndarray, w: np.ndarray, b: np.ndarray, logits: np.ndarray, action: int, reward: float):
-        """
-        Returns delta_w and delta_b, where
-        w{t+1} = w{t} + delta_w
-        b{t+1} = b{t} + delta_b
-
-        :param x: np.ndarray, shape=(d)
-        :param w: np.ndarray, shape=(d, actions)
-        :param b: np.ndarray, shape=(actions,)
-        :param logits: np.ndarray, shape=(action,)
-        :param action: int, action taken by the learner
-        :param reward: float, reward received by the learner
-        :return: delta, np.ndarray, shape=(actions)
-        """
+    def get_update(
+            self,
+            x: np.ndarray,
+            w: np.ndarray,
+            b: Union[np.ndarray, np.generic, float],
+            logits: np.ndarray,
+            action: int,
+            reward: float
+    ) -> Tuple[np.ndarray, Union[np.ndarray, np.generic, float]]:
         delta = np.zeros(w.shape)
 
         reward_prediction = logits[action]
@@ -120,21 +118,15 @@ class Square(UpdateRule):
 
 class Perceptron(UpdateRule):
 
-    def get_update(self, x: np.ndarray, w: np.ndarray, b: np.ndarray, logits: np.ndarray, action: int, reward: float):
-        """
-        Returns delta_w and delta_b, where
-        w{t+1} = w{t} + delta_w
-        b{t+1} = b{t} + delta_b
-
-        :param x: np.ndarray, shape=(d)
-        :param w: np.ndarray, shape=(d, actions)
-        :param b: np.ndarray, shape=(actions,)
-        :param logits: np.ndarray, shape=(action,)
-        :param action: int, action taken by the learner
-        :param reward: float, reward received by the learner
-        :return: delta, np.ndarray, shape=(actions)
-        """
-
+    def get_update(
+            self,
+            x: np.ndarray,
+            w: np.ndarray,
+            b: Union[np.ndarray, np.generic, float],
+            logits: np.ndarray,
+            action: int,
+            reward: float
+    ) -> Tuple[np.ndarray, Union[np.ndarray, np.generic, float]]:
         nactions = len(logits)
         gts = np.zeros(nactions)
 
@@ -148,21 +140,15 @@ class Perceptron(UpdateRule):
 
 class Hinge(UpdateRule):
 
-    def get_update(self, x: np.ndarray, w: np.ndarray, b: np.ndarray, logits: np.ndarray, action: int, reward: float):
-        """
-        Returns delta_w and delta_b, where
-        w{t+1} = w{t} + delta_w
-        b{t+1} = b{t} + delta_b
-
-        :param x: np.ndarray, shape=(d)
-        :param w: np.ndarray, shape=(d, actions)
-        :param b: np.ndarray, shape=(actions,)
-        :param logits: np.ndarray, shape=(action,)
-        :param action: int, action taken by the learner
-        :param reward: float, reward received by the learner
-        :return: delta, np.ndarray, shape=(actions)
-        """
-
+    def get_update(
+            self,
+            x: np.ndarray,
+            w: np.ndarray,
+            b: Union[np.ndarray, np.generic, float],
+            logits: np.ndarray,
+            action: int,
+            reward: float
+    ) -> Tuple[np.ndarray, Union[np.ndarray, np.generic, float]]:
         nactions = len(logits)
         gts = np.zeros(nactions)
 
@@ -176,20 +162,15 @@ class Hinge(UpdateRule):
 
 class MAE(UpdateRule):
 
-    def get_update(self, x: np.ndarray, w: np.ndarray, b: np.ndarray, logits: np.ndarray, action: int, reward: float):
-        """
-        Returns delta_w and delta_b, where
-        w{t+1} = w{t} + delta_w
-        b{t+1} = b{t} + delta_b
-
-        :param x: np.ndarray, shape=(d)
-        :param w: np.ndarray, shape=(d, actions)
-        :param b: np.ndarray, shape=(actions,)
-        :param logits: np.ndarray, shape=(action,)
-        :param action: int, action taken by the learner
-        :param reward: float, reward received by the learner
-        :return: delta, np.ndarray, shape=(actions)
-        """
+    def get_update(
+            self,
+            x: np.ndarray,
+            w: np.ndarray,
+            b: Union[np.ndarray, np.generic, float],
+            logits: np.ndarray,
+            action: int,
+            reward: float
+    ) -> Tuple[np.ndarray, Union[np.ndarray, np.generic, float]]:
 
         nactions = len(logits)
         reward_prediction = logits[action]
@@ -207,20 +188,15 @@ class MAE(UpdateRule):
 class Exponential(UpdateRule):
     max_weight_norm = 10.0
 
-    def get_update(self, x: np.ndarray, w: np.ndarray, b: np.ndarray, logits: np.ndarray, action: int, reward: float):
-        """
-        Returns delta_w and delta_b, where
-        w{t+1} = w{t} + delta_w
-        b{t+1} = b{t} + delta_b
-
-        :param x: np.ndarray, shape=(d)
-        :param w: np.ndarray, shape=(d, actions)
-        :param b: np.ndarray, shape=(actions,)
-        :param logits: np.ndarray, shape=(action,)
-        :param action: int, action taken by the learner
-        :param reward: float, reward received by the learner
-        :return: delta, np.ndarray, shape=(actions)
-        """
+    def get_update(
+            self,
+            x: np.ndarray,
+            w: np.ndarray,
+            b: Union[np.ndarray, np.generic, float],
+            logits: np.ndarray,
+            action: int,
+            reward: float
+    ) -> Tuple[np.ndarray, Union[np.ndarray, np.generic, float]]:
         nactions = len(logits)
 
         gts = np.zeros(nactions)
@@ -237,20 +213,15 @@ class Exponential(UpdateRule):
 
 class CE(UpdateRule):
 
-    def get_update(self, x: np.ndarray, w: np.ndarray, b: np.ndarray, logits: np.ndarray, action: int, reward: float):
-        """
-        Returns delta_w and delta_b, where
-        w{t+1} = w{t} + delta_w
-        b{t+1} = b{t} + delta_b
-
-        :param x: np.ndarray, shape=(d)
-        :param w: np.ndarray, shape=(d, actions)
-        :param b: np.ndarray, shape=(actions,)
-        :param logits: np.ndarray, shape=(action,)
-        :param action: int, action taken by the learner
-        :param reward: float, reward received by the learner
-        :return: delta, np.ndarray, shape=(actions)
-        """
+    def get_update(
+            self,
+            x: np.ndarray,
+            w: np.ndarray,
+            b: Union[np.ndarray, np.generic, float],
+            logits: np.ndarray,
+            action: int,
+            reward: float
+    ) -> Tuple[np.ndarray, Union[np.ndarray, np.generic, float]]:
         nactions = len(logits)
         gts = np.zeros(nactions)
         reward_prediction = logits[action]
@@ -290,20 +261,15 @@ class REINFORCE(UpdateRule):
         expression[action_taken] = 1 + expression[action_taken]
         return expression
 
-    def get_update(self, x: np.ndarray, w: np.ndarray, b: np.ndarray, logits: np.ndarray, action: int, reward: float):
-        """
-        Returns delta_w and delta_b, where
-        w{t+1} = w{t} + delta_w
-        b{t+1} = b{t} + delta_b
-
-        :param x: np.ndarray, shape=(d)
-        :param w: np.ndarray, shape=(d, actions)
-        :param b: np.ndarray, shape=(actions,)
-        :param logits: np.ndarray, shape=(action,)
-        :param action: int, action taken by the learner
-        :param reward: float, reward received by the learner
-        :return: delta, np.ndarray, shape=(actions)
-        """
+    def get_update(
+            self,
+            x: np.ndarray,
+            w: np.ndarray,
+            b: Union[np.ndarray, np.generic, float],
+            logits: np.ndarray,
+            action: int,
+            reward: float
+    ) -> Tuple[np.ndarray, Union[np.ndarray, np.generic, float]]:
         gt = self.alpha * reward * self._compute_trace(action, logits)
 
         delta = x[:, None] * gt[None, :]

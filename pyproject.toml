@@ -22,7 +22,8 @@ dependencies = [
     "tqdm>=4.67",
     "pydantic>=2.10",
     "xarray>=2025.1",
-    "pytest>=8.3"
+    "pytest>=8.3",
+    #"mref @ git+https://github.com/himjl/mref.git",
 ]
 
 [project.urls]

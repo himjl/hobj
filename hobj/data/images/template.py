@@ -9,8 +9,9 @@ from tqdm import tqdm
 
 from hobj.utils.file_io import unzip_file
 from hobj.utils.hash import hash_image
-from hobj.data.schema import ImageRef
-from hobj.data.store import DataStore, default_data_store
+from mref import ImageRef
+from hobj.data.store import default_data_store
+from mref import FileSystemStorage
 import warnings
 
 
@@ -47,7 +48,7 @@ class Imageset(Generic[IA], ABC):
 
     def __init__(
             self,
-            data_store: DataStore = None,
+            data_store: FileSystemStorage = None,
             redownload=False,
     ):
         """
@@ -55,10 +56,10 @@ class Imageset(Generic[IA], ABC):
         """
 
         if not data_store:
-            self.data_store: DataStore = default_data_store
+            self.data_store: FileSystemStorage = default_data_store
 
         # Load the manifest if it is already cached
-        manifest_data = self.data_store.get_json_data_from_url(url=self.manifest_url, redownload=redownload)
+        manifest_data = self.data_store.download_json_from_url(url=self.manifest_url, register=True) # Todo
         image_manifest = ImageManifest(**manifest_data)
 
         self._register_image_urls(manifest=image_manifest, redownload=redownload)
@@ -85,8 +86,8 @@ class Imageset(Generic[IA], ABC):
 
         num_undownloaded_images = 0
         for image_id, manifest_entry in manifest.entries.items():
-
-            if not self.data_store.check_image_exists(sha256=manifest_entry.sha256):
+            ref = ImageRef(sha256=manifest_entry.sha256)
+            if not self.data_store.check_data_exists(ref=ref):
                 num_undownloaded_images += 1
 
         if num_undownloaded_images == 0:
@@ -95,7 +96,7 @@ class Imageset(Generic[IA], ABC):
         print(f'Missing {num_undownloaded_images}/{len(manifest.entries)} images for this imageset.')
 
         # Download the images
-        zipped_images_path = self.data_store.get_zipfile(zipfile_url=self.zipped_images_url, redownload=redownload)
+        zipped_images_path = self.data_store.download_zip_path_from_url(url=self.zipped_images_url, register=True) # todo type correctly
 
         # Make a tempdir to unzip the images
         with tempfile.TemporaryDirectory() as tempdir:
@@ -109,11 +110,14 @@ class Imageset(Generic[IA], ABC):
                 relpath = manifest_entry.relpath
                 image_path = tempdir / relpath
                 image_data = PIL.Image.open(image_path)
-                actual_sha256 = hash_image(image=image_data)
-                if not actual_sha256 == reported_sha256:
-                    raise ValueError(f"SHA256 mismatch for image {manifest_entry}: {actual_sha256} != {reported_sha256}")
 
-                self.data_store.register_image(image_data=image_data)
+                image_ref = ImageRef.from_image(image=image_data)
+
+                if not image_ref.sha256 == reported_sha256:
+                    raise ValueError(f"SHA256 mismatch for image {manifest_entry}: {image_ref.sha256} != {reported_sha256}")
+
+                # Store image
+                self.data_store.register_image(image=image_data)
                 pbar.update(1)
 
     @property

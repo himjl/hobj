@@ -1,11 +1,9 @@
-from typing import List, Union, Optional
-
 import numpy as np
 import pydantic
+from typing import List, Union, Optional
 
-from hobj.data.schema import ImageRef
 from hobj.learning_models import BinaryLearningModel
-from uuid import uuid4
+from mref import ImageRef
 
 
 # %%
