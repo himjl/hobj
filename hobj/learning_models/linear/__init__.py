@@ -1,10 +1,8 @@
-import typing
-
 import PIL.Image
 import numpy as np
+import typing
 
 import mref.media_references
-from hobj.data import schema as schema
 from hobj.learning_models import BinaryLearningModel
 from hobj.learning_models.linear.representation import RepresentationalModel
 from hobj.learning_models.linear.update_rules import UpdateRule
