@@ -1,3 +1,3 @@
 from pathlib import Path
 
-cachedir: Path = Path.home() / 'hobj_cache2'
+cachedir: Path = Path.home() / 'hobj_cache'
