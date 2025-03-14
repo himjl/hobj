@@ -23,7 +23,7 @@ dependencies = [
     "pydantic>=2.10",
     "xarray>=2025.1",
     "pytest>=8.3",
-    #"mref @ git+https://github.com/himjl/mref.git",
+    "mref @ git+https://github.com/himjl/mref.git",
 ]
 
 [project.urls]
