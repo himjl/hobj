@@ -1,7 +1,8 @@
-import numpy as np
-import scipy.special
 from abc import ABC, abstractmethod
 from typing import Tuple, Union
+
+import numpy as np
+import scipy.special
 
 
 class UpdateRule(ABC):
@@ -52,6 +53,7 @@ class UpdateRule(ABC):
         return delta_w, delta_b
 
 
+# %%
 class Prototype(UpdateRule):
     """
     Simulates the decision boundary implemented by a prototype learner.

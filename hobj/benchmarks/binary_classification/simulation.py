@@ -1,9 +1,9 @@
+from typing import List, Optional, Union
+
 import numpy as np
 import pydantic
-from typing import List, Union, Optional
-
+from hobj.types import ImageId
 from hobj.learning_models import BinaryLearningModel
-from mref import ImageRef
 
 
 # %%
@@ -26,14 +26,14 @@ class BinaryClassificationSubtask(pydantic.BaseModel):
         frozen=True
     )
 
-    classA: List[ImageRef]
-    classB: List[ImageRef]
+    classA: List[ImageId]
+    classB: List[ImageId]
     ntrials: int = pydantic.Field(description='The number of trials in the subtask.', gt=0)
     replace: bool = pydantic.Field(description='Whether to show stimulus images with replacement or not.')
 
     @pydantic.field_validator('classA', 'classB', mode='after')
     @classmethod
-    def sort_image_refs(cls, value: List[ImageRef]) -> List[ImageRef]:
+    def sort_image_refs(cls, value: List[ImageId]) -> List[ImageId]:
         return sorted(value)
 
     @pydantic.model_validator(mode='after')

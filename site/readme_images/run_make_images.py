@@ -2,11 +2,9 @@ if __name__ == '__main__':
 
     # %%
     import matplotlib.pyplot as plt
-    from hobj.data.images import MutatorHighVarImageset
     from hobj.benchmarks import MutatorHighVarBenchmark
     import numpy as np
 
-    imageset = MutatorHighVarImageset()
     benchmark = MutatorHighVarBenchmark()
 
     target_stats = benchmark.target_statistics

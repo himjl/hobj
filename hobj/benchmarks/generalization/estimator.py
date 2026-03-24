@@ -1,7 +1,8 @@
-import numpy as np
 import warnings
-import xarray as xr
 from typing import List
+
+import numpy as np
+import xarray as xr
 
 from hobj.benchmarks.generalization.simulator import GeneralizationSessionResult
 from hobj.stats import binomial as binomial_funcs

@@ -2,13 +2,13 @@ import collections
 # Coercing human data
 from typing import Dict, List
 
-from hobj.benchmarks.generalization.benchmark import GeneralizationBenchmarkConfig, GeneralizationBenchmark, GeneralizationSessionResult
+from hobj.benchmarks.generalization.benchmark import GeneralizationBenchmark, GeneralizationBenchmarkConfig, GeneralizationSessionResult
 from hobj.benchmarks.generalization.estimator import GeneralizationStatistics
 from hobj.benchmarks.generalization.simulator import GeneralizationSubtask
-from hobj.data.behavior import load_oneshot_behavior
-from hobj.data.images import MutatorOneShotImageset
-from mref import ImageRef
+from hobj.data_loaders.behavior import load_oneshot_behavior
+from hobj.data_loaders.images import MutatorOneShotImageset
 
+from hobj.types import ImageId
 
 # %%
 
@@ -96,24 +96,24 @@ class MutatorOneshotBenchmark(GeneralizationBenchmark):
 
         # Map image refs to transformation ids
         image_ref_to_transformation_id = {}
-        cat_to_support_image: Dict[str, ImageRef] = {}
-        cat_to_test_images: Dict[str, List[ImageRef]] = {}
+        cat_to_support_image: Dict[str, ImageId] = {}
+        cat_to_test_images: Dict[str, List[ImageId]] = {}
 
-        for ref in imageset.image_refs:
-            annotation = imageset.get_annotation(image_ref=ref)
+        for image_id in imageset.image_ids:
+            annotation = imageset.get_annotation(image_id=image_id)
             transformation_id = f"{annotation.transformation} | {annotation.transformation_level}"
-            image_ref_to_transformation_id[ref] = transformation_id
+            image_ref_to_transformation_id[image_id] = transformation_id
 
             if annotation.transformation == 'original':
                 if annotation.category not in cat_to_support_image:
-                    cat_to_support_image[annotation.category] = ref
+                    cat_to_support_image[annotation.category] = image_id
                 else:
                     raise ValueError(f"Multiple support images for category {annotation.category}")
             else:
                 if annotation.category not in cat_to_test_images:
                     cat_to_test_images[annotation.category] = []
 
-                cat_to_test_images[annotation.category].append(ref)
+                cat_to_test_images[annotation.category].append(image_id)
 
         # Assemble subtask simulators
         subtasks = []
@@ -148,8 +148,8 @@ class MutatorOneshotBenchmark(GeneralizationBenchmark):
             observed_categories = set()
 
             for i_trial, sha in enumerate(session.stimulus_sha256_seq):
-                ref = ImageRef(sha256=sha)
-                annotation = imageset.get_annotation(image_ref=ref)
+                image_id = sha
+                annotation = imageset.get_annotation(image_id=image_id)
 
                 # Add stimulus category to observed categories
                 observed_categories.add(annotation.category)
@@ -166,7 +166,7 @@ class MutatorOneshotBenchmark(GeneralizationBenchmark):
                     ncatch += 1
                 else:
                     assert annotation.transformation != 'original'
-                    transformation_id = image_ref_to_transformation_id[ref]
+                    transformation_id = image_ref_to_transformation_id[image_id]
 
                     # Keep only benchmarked transformations
                     if transformation_id in self.transformation_ids:

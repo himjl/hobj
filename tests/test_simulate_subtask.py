@@ -1,18 +1,18 @@
-from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask
-from hobj.learning_models import RandomGuesser
-from mref import ImageRef
 from typing import List
+
 import PIL.Image
 import numpy as np
 
+from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask
+from hobj.learning_models import RandomGuesser
+from hobj.types import ImageId
 
-def create_image_refs(nimages_per_class: int, seed: int) -> List[ImageRef]:
+
+def create_image_refs(nimages_per_class: int, seed: int) -> List[ImageId]:
     images = []
     np.random.seed(seed)
-    for _ in range(nimages_per_class):
-        image = PIL.Image.fromarray(np.random.randint(0, 255, (100, 100, 3), dtype=np.uint8))
-        image_ref = ImageRef.from_image(image=image)
-        images.append(image_ref)
+    for i in range(nimages_per_class):
+        images.append(f'seed{seed}_image{i}')
 
     return images
 
@@ -36,6 +36,3 @@ def test_simulate_subtask():
     )
 
     assert len(result.perf_seq) == ntrials
-
-
-# Todo: test deterministic

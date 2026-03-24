@@ -1,4 +1,4 @@
-from hobj.data.behavior import load_highvar_behavior, load_oneshot_behavior
+from hobj.data_loaders.behavior import load_highvar_behavior, load_oneshot_behavior
 
 
 def test_load_highvar():

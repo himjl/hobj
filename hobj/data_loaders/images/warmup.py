@@ -1,7 +1,6 @@
 import pydantic
 
-from hobj.data.images.template import Imageset
-
+from hobj.data_loaders.images.template import Imageset
 
 
 class MutatorWarmupAnnotation(pydantic.BaseModel):

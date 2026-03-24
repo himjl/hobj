@@ -1,9 +1,10 @@
-import numpy as np
 import hashlib
+
 import PIL.Image
+import numpy as np
 
 
-def hash_image(image: PIL.Image) -> str:
+def hash_image(image: PIL.Image.Image) -> str:
     """
     Hash an image based on its np.uint8 representation.
     :param image:

@@ -22,6 +22,7 @@ dependencies = [
     "tqdm>=4.67",
     "pydantic>=2.10",
     "xarray>=2025.1",
+    "scipy>=1.17.1",
 ]
 
 [dependency-groups]

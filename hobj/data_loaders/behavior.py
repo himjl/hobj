@@ -1,9 +1,11 @@
-from typing import List, Literal
 import datetime
+import json
+from pathlib import Path
+from typing import List, Literal
 
 import pydantic
 
-from hobj.data.store import default_data_store
+from hobj.utils.file_io import download_json
 
 __all__ = ['load_highvar_behavior', 'load_oneshot_behavior']
 
@@ -53,16 +55,22 @@ class HumanLearningSession(pydantic.BaseModel):
 # %%
 def _load_learning_sessions(
         dataset_url: str,
-        redownload: bool
+        cache_filename: str,
+        cachedir: Path | None = None,
+        redownload: bool = False,
 ) -> List[HumanLearningSession]:
-    data_store = default_data_store
-    # Download the data:
-    json_data = data_store.download_json_from_url(
-        url=dataset_url,
-        register=True,
-    )
+    repo_root = Path(__file__).resolve().parents[2]
+    cache_root = (cachedir if cachedir is not None else repo_root / 'data').resolve()
+    behavior_dir = cache_root / 'behavior'
+    behavior_dir.mkdir(parents=True, exist_ok=True)
+    dataset_path = behavior_dir / cache_filename
 
-    #
+    if redownload or not dataset_path.exists():
+        json_data = download_json(dataset_url)
+        dataset_path.write_text(json.dumps(json_data, indent=2))
+    else:
+        json_data = json.loads(dataset_path.read_text())
+
     class LearningSessionDataset(pydantic.BaseModel):
         sessions: List[HumanLearningSession]
 
@@ -72,8 +80,9 @@ def _load_learning_sessions(
 
 # %% Data loaders
 def load_highvar_behavior(
+        remove_probe_trials: bool = True,
+        cachedir: Path | None = None,
         redownload: bool = False,
-        remove_probe_trials: bool = True
 ) -> List[HumanLearningSession]:
     """
     Load the "raw" human learning data from Experiment 1 of Lee and DiCarlo 2023.
@@ -82,7 +91,9 @@ def load_highvar_behavior(
 
     sessions = _load_learning_sessions(
         dataset_url='https://hlbdatasets.s3.us-east-1.amazonaws.com/behavior/mutator-highvar-human-learning-data.json',
-        redownload=redownload
+        cache_filename='mutator-highvar-human-learning-data.json',
+        cachedir=cachedir,
+        redownload=redownload,
     )
 
     if not remove_probe_trials:
@@ -109,7 +120,10 @@ def load_highvar_behavior(
     return filtered_sessions
 
 
-def load_oneshot_behavior(redownload: bool = False) -> List[HumanLearningSession]:
+def load_oneshot_behavior(
+        cachedir: Path | None = None,
+        redownload: bool = False,
+) -> List[HumanLearningSession]:
     """
     Load the "raw" human learning data from Experiment 2 of Lee and DiCarlo 2023.
     :return:
@@ -117,6 +131,8 @@ def load_oneshot_behavior(redownload: bool = False) -> List[HumanLearningSession
 
     sessions = _load_learning_sessions(
         dataset_url='https://hlbdatasets.s3.us-east-1.amazonaws.com/behavior/mutator-oneshot-human-learning-data.json',
+        cache_filename='mutator-oneshot-human-learning-data.json',
+        cachedir=cachedir,
         redownload=redownload
     )
 

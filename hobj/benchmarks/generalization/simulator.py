@@ -1,12 +1,11 @@
-from typing import List, Union, Dict, Optional
+import collections
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import pydantic
 
-from mref import ImageRef
 from hobj.learning_models import BinaryLearningModel
-import collections
-
+from hobj.types import ImageId
 
 # %%
 class GeneralizationSessionResult(pydantic.BaseModel):
@@ -37,15 +36,15 @@ class GeneralizationSubtask(pydantic.BaseModel):
         frozen=True
     )
 
-    support_imageA: ImageRef
-    support_imageB: ImageRef
-    test_imagesA: List[ImageRef]
-    test_imagesB: List[ImageRef]
-    image_ref_to_transformation: Dict[ImageRef, str]
+    support_imageA: ImageId
+    support_imageB: ImageId
+    test_imagesA: List[ImageId]
+    test_imagesB: List[ImageId]
+    image_ref_to_transformation: Dict[ImageId, str]
 
     @pydantic.field_validator('test_imagesA', 'test_imagesB', mode='after')
     @classmethod
-    def sort_image_refs(cls, value: List[ImageRef]) -> List[ImageRef]:
+    def sort_image_refs(cls, value: List[ImageId]) -> List[ImageId]:
         return sorted(value)
 
     @pydantic.model_validator(mode='after')
