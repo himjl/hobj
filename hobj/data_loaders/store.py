@@ -1,8 +1,8 @@
 
+import mref
+
 import hobj.config
 
-
-import mref
 __all__ = [
     'default_data_store'
 ]

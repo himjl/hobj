@@ -1,12 +1,13 @@
+from dataclasses import dataclass
+from typing import List, Tuple
+
 import numpy as np
 import pydantic
 import xarray as xr
-from dataclasses import dataclass
 from tqdm import tqdm
-from typing import List, Tuple
 
 from hobj.benchmarks.generalization.estimator import GeneralizationStatistics
-from hobj.benchmarks.generalization.simulator import GeneralizationSubtask, GeneralizationSessionResult
+from hobj.benchmarks.generalization.simulator import GeneralizationSessionResult, GeneralizationSubtask
 from hobj.learning_models import BinaryLearningModel
 from hobj.stats.ci import estimate_basic_bootstrap_CI
 

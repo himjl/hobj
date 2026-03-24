@@ -1,5 +1,6 @@
+from typing import Dict, List
+
 import numpy as np
-from typing import List, Dict
 
 from hobj.benchmarks.binary_classification.benchmark import LearningCurveBenchmark, LearningCurveBenchmarkConfig, TargetSubtaskData
 from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask, BinaryClassificationSubtaskResult

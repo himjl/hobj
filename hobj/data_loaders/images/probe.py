@@ -1,7 +1,9 @@
 
-from hobj.data_loaders.images.template import Imageset
-import pydantic
 from typing import Literal
+
+import pydantic
+
+from hobj.data_loaders.images.template import Imageset
 
 
 class ProbeAnnotation(pydantic.BaseModel):

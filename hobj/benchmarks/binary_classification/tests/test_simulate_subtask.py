@@ -1,9 +1,11 @@
-from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask
-from hobj.learning_models import RandomGuesser
-from mref import ImageRef
 from typing import List
+
 import PIL.Image
 import numpy as np
+from mref import ImageRef
+
+from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask
+from hobj.learning_models import RandomGuesser
 
 
 def create_image_refs(nimages_per_class: int, seed: int) -> List[ImageRef]:

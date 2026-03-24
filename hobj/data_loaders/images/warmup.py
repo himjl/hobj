@@ -3,7 +3,6 @@ import pydantic
 from hobj.data_loaders.images.template import Imageset
 
 
-
 class MutatorWarmupAnnotation(pydantic.BaseModel):
     category: str = pydantic.Field(
         examples=[

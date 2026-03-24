@@ -1,12 +1,12 @@
-import PIL.Image
-import numpy as np
 import typing
 
-import mref.media_references
+import numpy as np
+
 from hobj.learning_models import BinaryLearningModel
 from hobj.learning_models.linear.representation import RepresentationalModel
 from hobj.learning_models.linear.update_rules import UpdateRule
 from hobj.types import ImageId
+
 
 # %%
 class LinearLearner(BinaryLearningModel):

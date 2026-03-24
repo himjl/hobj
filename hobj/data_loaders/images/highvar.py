@@ -1,9 +1,9 @@
-import mref.media_references
-from hobj.data_loaders.images.template import Imageset
-import pydantic
-
 from typing import Dict, List
 
+import mref.media_references
+import pydantic
+
+from hobj.data_loaders.images.template import Imageset
 
 
 class MutatorHighVarAnnotation(pydantic.BaseModel):

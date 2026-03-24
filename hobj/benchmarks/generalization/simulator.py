@@ -1,11 +1,11 @@
-from typing import List, Union, Dict, Optional
+import collections
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import pydantic
-
 from mref import ImageRef
+
 from hobj.learning_models import BinaryLearningModel
-import collections
 
 
 # %%

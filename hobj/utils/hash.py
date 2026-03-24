@@ -1,6 +1,7 @@
-import numpy as np
 import hashlib
+
 import PIL.Image
+import numpy as np
 
 
 def hash_image(image: PIL.Image.Image) -> str:

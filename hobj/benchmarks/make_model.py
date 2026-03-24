@@ -1,12 +1,13 @@
 """
 This module provides an alternative interface for instantiating a linear learning model.
 """
-from hobj.learning_models.linear import LinearLearner, RepresentationalModel
-import hobj.learning_models.linear.update_rules as update_rules
-from typing import Literal, Dict
+from typing import Dict, List, Literal
+
 import mref
 import numpy as np
-from typing import List
+
+import hobj.learning_models.linear.update_rules as update_rules
+from hobj.learning_models.linear import LinearLearner, RepresentationalModel
 
 
 # %%

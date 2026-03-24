@@ -1,7 +1,8 @@
-import numpy as np
-import scipy.special
 from abc import ABC, abstractmethod
 from typing import Tuple, Union
+
+import numpy as np
+import scipy.special
 
 
 class UpdateRule(ABC):
