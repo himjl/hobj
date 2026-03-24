@@ -4,7 +4,7 @@ from typing import List, Dict
 from hobj.benchmarks.binary_classification.benchmark import LearningCurveBenchmark, LearningCurveBenchmarkConfig, TargetSubtaskData
 from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask, BinaryClassificationSubtaskResult
 from hobj.data.behavior import load_highvar_behavior
-from hobj.data.images import MutatorHighVarImageset
+from hobj.images import MutatorHighVarImageset
 
 
 # %%

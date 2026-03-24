@@ -1,6 +1,6 @@
 import pydantic
 
-from hobj.data.images.template import Imageset
+from hobj.images.template import Imageset
 
 
 

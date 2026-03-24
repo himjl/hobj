@@ -6,7 +6,7 @@ from hobj.benchmarks.generalization.benchmark import GeneralizationBenchmarkConf
 from hobj.benchmarks.generalization.estimator import GeneralizationStatistics
 from hobj.benchmarks.generalization.simulator import GeneralizationSubtask
 from hobj.data.behavior import load_oneshot_behavior
-from hobj.data.images import MutatorOneShotImageset
+from hobj.images import MutatorOneShotImageset
 from mref import ImageRef
 
 

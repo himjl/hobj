@@ -3,7 +3,7 @@ from typing import Literal
 
 import pydantic
 
-from hobj.data.images.template import Imageset
+from hobj.images.template import Imageset
 
 
 class MutatorOneShotAnnotation(pydantic.BaseModel):
