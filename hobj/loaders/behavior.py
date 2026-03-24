@@ -3,7 +3,7 @@ import datetime
 
 import pydantic
 
-from hobj.data.store import default_data_store
+from hobj.loaders.store import default_data_store
 
 __all__ = ['load_highvar_behavior', 'load_oneshot_behavior']
 

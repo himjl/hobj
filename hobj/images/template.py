@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from hobj.utils.file_io import unzip_file
 from mref import ImageRef
-from hobj.data.store import default_data_store
+from hobj.loaders.store import default_data_store
 from mref import FileSystemStorage
 import warnings
 
