@@ -39,3 +39,17 @@ The `hobj` package works for Python >=3.11. After cloning this repository on you
 
 ### Changes to codebase since publication
 This codebase was refactored in January 2025 to improve the performance and quality of the code, and is now designated as `v2`. Along the way, minor refinements to the statistical analysis of the original codebase were introduced (see [changelist](site/changelist.md)). To see the codebase at the time of publication, check out the repo with the `v1` tag [here](https://github.com/himjl/hobj/releases/tag/v1).
+
+### Citation
+
+```
+@article{lee2023well,
+  title={How well do rudimentary plasticity rules predict adult visual object learning?},
+  author={Lee, Michael J and DiCarlo, James J},
+  journal={PLOS Computational Biology},
+  volume={19},
+  number={12},
+  pages={e1011713},
+  year={2023},
+  publisher={Public Library of Science San Francisco, CA USA}
+}```
