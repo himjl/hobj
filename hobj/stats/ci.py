@@ -11,7 +11,7 @@ def estimate_basic_bootstrap_CI(
     Estimates the basic confidence interval for a given point estimate(s) using the bootstrap method.
     :param alpha: Sets the width of the confidence interval to be 1 - alpha. Must be in the range (0, 1).
     :param point_estimate: The point estimate(s) for which the confidence interval is to be estimated.
-    :param bootstrapped_point_estimate: Bootstrap resamples of the point estimate in question.
+    :param bootstrapped_point_estimates: Bootstrap resamples of the point estimate in question.
     :return: A tuple containing the lower and upper bounds of the confidence interval.
     """
 
