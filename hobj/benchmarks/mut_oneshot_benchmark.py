@@ -100,8 +100,8 @@ class MutatorOneshotBenchmark(GeneralizationBenchmark):
         cat_to_support_image: Dict[str, ImageRef] = {}
         cat_to_test_images: Dict[str, List[ImageRef]] = {}
 
-        for ref in imageset.image_refs:
-            annotation = imageset.get_annotation(image_ref=ref)
+        for ref in imageset.image_ids:
+            annotation = imageset.get_annotation(image_id=ref)
             transformation_id = f"{annotation.transformation} | {annotation.transformation_level}"
             image_ref_to_transformation_id[ref] = transformation_id
 
@@ -150,7 +150,7 @@ class MutatorOneshotBenchmark(GeneralizationBenchmark):
 
             for i_trial, sha in enumerate(session.stimulus_sha256_seq):
                 ref = ImageRef(sha256=sha)
-                annotation = imageset.get_annotation(image_ref=ref)
+                annotation = imageset.get_annotation(image_id=ref)
 
                 # Add stimulus category to observed categories
                 observed_categories.add(annotation.category)

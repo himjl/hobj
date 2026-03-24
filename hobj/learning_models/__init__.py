@@ -5,13 +5,11 @@ import numpy as np
 
 from hobj.learning_models.representation import RepresentationalModel
 from hobj.learning_models.update_rules import UpdateRule
-
 from hobj.types import ImageId
 
 
 # %%
 class BinaryLearningModel(ABC):
-
     @abstractmethod
     def reset_state(self, seed: typing.Union[int, None]) -> None:
         """

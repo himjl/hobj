@@ -22,7 +22,7 @@ class MutatorHighVarBenchmark(LearningCurveBenchmark):
 
         # Normalize data for benchmark:
         sha256_to_category = {
-            ref.sha256: imageset.get_annotation(image_ref=ref).category for ref in imageset.image_refs
+            ref.sha256: imageset.get_annotation(image_id=ref).category for ref in imageset.image_ids
         }
 
         subtask_name_to_results = {}
@@ -47,8 +47,8 @@ class MutatorHighVarBenchmark(LearningCurveBenchmark):
             # Instantiate the subtask if it does not exist:
             if subtask_name not in subtask_name_to_subtask:
                 subtask = BinaryClassificationSubtask(
-                    classA=imageset.category_to_image_refs[cat0],
-                    classB=imageset.category_to_image_refs[cat1],
+                    classA=imageset.category_to_image_ids[cat0],
+                    classB=imageset.category_to_image_ids[cat1],
                     ntrials=100,
                     replace=False,
                 )

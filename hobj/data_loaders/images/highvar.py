@@ -1,10 +1,11 @@
-from typing import Dict, List
-
-import mref.media_references
+from pathlib import Path
 import pydantic
 
 from hobj.data_loaders.images.template import Imageset
 
+from hobj.types import ImageId
+
+# %%
 
 class MutatorHighVarAnnotation(pydantic.BaseModel):
     category: str = pydantic.Field(
@@ -21,24 +22,24 @@ class MutatorHighVarImageset(Imageset[MutatorHighVarAnnotation]):
     zipped_images_url = 'https://hlbdatasets.s3.us-east-1.amazonaws.com/imagesets/mutator-highvar/MutatorB2000_Subset128_FullVar_Train.zip'
     annotation_schema = MutatorHighVarAnnotation
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, cachedir: Path | None = None, redownload: bool = False):
+        super().__init__(cachedir=cachedir, redownload=redownload)
 
-        self._category_to_image_refs: Dict[str, List[mref.media_references.ImageRef]] = {}
+        self._category_to_image_ids: dict[str, list[ImageId]] = {}
 
-        for ref in self.image_refs:
-            annotation = self.get_annotation(image_ref=ref)
+        for ref in self.image_ids:
+            annotation = self.get_annotation(image_id=ref)
             category = annotation.category
-            if category not in self._category_to_image_refs:
-                self._category_to_image_refs[category] = []
-            self._category_to_image_refs[category].append(ref)
+            if category not in self._category_to_image_ids:
+                self._category_to_image_ids[category] = []
+            self._category_to_image_ids[category].append(ref)
 
-        for category in self._category_to_image_refs:
-            self._category_to_image_refs[category] = sorted(self._category_to_image_refs[category])
+        for category in self._category_to_image_ids:
+            self._category_to_image_ids[category] = sorted(self._category_to_image_ids[category])
 
     @property
-    def category_to_image_refs(self) -> Dict[str, List[mref.media_references.ImageRef]]:
-        return self._category_to_image_refs
+    def category_to_image_ids(self) -> dict[str, list[ImageId]]:
+        return self._category_to_image_ids
 
 
 if __name__ == '__main__':

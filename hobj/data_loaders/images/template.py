@@ -1,18 +1,17 @@
-import tempfile
-import warnings
+import json
 from abc import ABC
 from pathlib import Path
 from typing import Any, Dict, Generic, List, TypeVar
 
 import PIL.Image
 import pydantic
-from mref import FileSystemStorage, ImageRef
-from tqdm import tqdm
 
-from hobj.data_loaders.store import default_data_store
-from hobj.utils.file_io import unzip_file
+from hobj.types import ImageId
+from hobj.utils.file_io import download_file, download_json, unzip_file
+from hobj.utils.hash import hash_image
 
 
+# %%
 class ImageManifestEntry(pydantic.BaseModel, ABC):
     sha256: str = pydantic.Field(pattern=r'^[a-f0-9]{64}$')
     relpath: Path = pydantic.Field(
@@ -24,7 +23,7 @@ class ImageManifestEntry(pydantic.BaseModel, ABC):
 
 
 class ImageManifest(pydantic.BaseModel):
-    entries: Dict[str, ImageManifestEntry] = pydantic.Field(
+    entries: Dict[ImageId, ImageManifestEntry] = pydantic.Field(
         description='A mapping from a unique image ID to image manifest entries.'
     )
 
@@ -46,103 +45,118 @@ class Imageset(Generic[IA], ABC):
 
     def __init__(
             self,
-            data_store: FileSystemStorage = None,
+            cachedir: Path | None = None,
             redownload=False,
     ):
         """
-        Unwrap the image manifest and save the images to the cache.
+        Download and materialize the imageset into a local cache directory.
         """
 
-        if not data_store:
-            self.data_store: FileSystemStorage = default_data_store
+        repo_root = Path(__file__).resolve().parents[3]
+        self.cachedir = (cachedir if cachedir is not None else repo_root / 'data').resolve()
+        self.cachedir.mkdir(parents=True, exist_ok=True)
 
-        # Load the manifest if it is already cached
-        manifest_data = self.data_store.download_json_from_url(url=self.manifest_url, register=True) # Todo
+        self._dataset_dir = self.cachedir / self.__class__.__name__
+        self._dataset_dir.mkdir(parents=True, exist_ok=True)
+        self._images_dir = self._dataset_dir / 'images'
+
+        manifest_data = self._load_manifest_json(redownload=redownload)
         image_manifest = ImageManifest(**manifest_data)
-
-        self._register_image_urls(manifest=image_manifest, redownload=redownload)
         self._manifest = image_manifest
+        self._ensure_images_present(manifest=image_manifest, redownload=redownload)
 
-        self._image_id_to_annotation: Dict[str, IA] = {}
-        self._image_id_to_sha256: Dict[str, str] = {}
-        self._sha256_to_image_ids: Dict[str, List[str]] = {}
-        self._image_refs: List[ImageRef] = []
+        self._image_id_to_annotation: Dict[ImageId, IA] = {}
+        self._image_id_to_sha256: Dict[ImageId, str] = {}
+        self._image_id_to_relpath: Dict[ImageId, Path] = {}
+        self._image_ids: List[ImageId] = []
 
         for image_id, entry in image_manifest.entries.items():
-            image_ref = ImageRef(sha256=entry.sha256)
-            self._image_refs.append(image_ref)
-            self._image_id_to_sha256[image_id] = image_ref.sha256
+            self._image_ids.append(image_id)
+            self._image_id_to_sha256[image_id] = entry.sha256
+            self._image_id_to_relpath[image_id] = entry.relpath
             self._image_id_to_annotation[image_id] = self.annotation_schema(**entry.annotation)
-            if image_ref.sha256 not in self._sha256_to_image_ids:
-                self._sha256_to_image_ids[image_ref.sha256] = []
-            self._sha256_to_image_ids[image_ref.sha256].append(image_id)
 
-    def _register_image_urls(self, manifest: ImageManifest, redownload: bool = False):
+    def _load_manifest_json(self, redownload: bool) -> dict[str, Any]:
+        if redownload or not self.manifest_path.exists():
+            manifest_data = download_json(self.manifest_url)
+            self.manifest_path.write_text(json.dumps(manifest_data, indent=2))
+        return json.loads(self.manifest_path.read_text())
+
+    def _ensure_images_present(self, manifest: ImageManifest, redownload: bool = False) -> None:
         """
-        Ensures the entries of the manifest are registered in the data store.
+        Ensure the images for this imageset exist locally.
         """
+        if redownload or not self._all_images_present(manifest):
+            self._download_and_extract_images(manifest)
 
-        num_undownloaded_images = 0
-        for image_id, manifest_entry in manifest.entries.items():
-            ref = ImageRef(sha256=manifest_entry.sha256)
-            if not self.data_store.check_data_exists(ref=ref):
-                num_undownloaded_images += 1
+    def _all_images_present(self, manifest: ImageManifest) -> bool:
+        for entry in manifest.entries.values():
+            if not (self._images_dir / entry.relpath).exists():
+                return False
+        return True
 
-        if num_undownloaded_images == 0:
-            return
+    def _download_and_extract_images(self, manifest: ImageManifest) -> None:
+        self._dataset_dir.mkdir(parents=True, exist_ok=True)
+        if self._images_dir.exists():
+            for path in sorted(self._images_dir.rglob('*'), reverse=True):
+                if path.is_file():
+                    path.unlink()
+                elif path.is_dir():
+                    path.rmdir()
+            self._images_dir.rmdir()
 
-        print(f'Missing {num_undownloaded_images}/{len(manifest.entries)} images for this imageset.')
+        download_file(self.zipped_images_url, self.archive_path)
+        unzip_file(zip_path=self.archive_path, output_dir=self._images_dir)
+        self._verify_images(manifest)
 
-        # Download the images
-        zipped_images_path = self.data_store.download_zip_path_from_url(url=self.zipped_images_url, register=True) # todo type correctly
+    def _verify_images(self, manifest: ImageManifest) -> None:
+        for image_id, entry in manifest.entries.items():
+            image_path = self._images_dir / entry.relpath
+            if not image_path.exists():
+                raise FileNotFoundError(f"Missing image file for {image_id}: {image_path}")
 
-        # Make a tempdir to unzip the images
-        with tempfile.TemporaryDirectory() as tempdir:
-            tempdir = Path(tempdir)
-            unzip_file(zip_path=zipped_images_path, output_dir=tempdir)
+            with PIL.Image.open(image_path) as image_data:
+                observed_sha256 = hash_image(image_data)
 
-            # Register the images
-            pbar = tqdm(total=len(manifest.entries))
-            for image_id, manifest_entry in manifest.entries.items():
-                reported_sha256 = manifest_entry.sha256
-                relpath = manifest_entry.relpath
-                image_path = tempdir / relpath
-                image_data = PIL.Image.open(image_path)
-
-                image_ref = ImageRef.from_image(image=image_data)
-
-                if not image_ref.sha256 == reported_sha256:
-                    raise ValueError(f"SHA256 mismatch for image {manifest_entry}: {image_ref.sha256} != {reported_sha256}")
-
-                # Store image
-                self.data_store.register_image(image=image_data)
-                pbar.update(1)
+            if observed_sha256 != entry.sha256:
+                raise ValueError(
+                    f"SHA256 mismatch for image {image_id}: {observed_sha256} != {entry.sha256}"
+                )
 
     @property
-    def image_refs(self) -> List[ImageRef]:
+    def manifest_path(self) -> Path:
+        return self._dataset_dir / 'manifest.json'
+
+    @property
+    def archive_path(self) -> Path:
+        archive_name = Path(self.zipped_images_url).name
+        return self._dataset_dir / archive_name
+
+    @property
+    def images_dir(self) -> Path:
+        return self._images_dir
+
+    @property
+    def image_ids(self) -> list[ImageId]:
         """
         List of image refs in this imageset.
         :return:
         """
-        return self._image_refs
+        return self._image_ids
 
-    def get_annotation(self, *, image_ref: ImageRef = None, sha256: str = None, ) -> IA:
+    def get_annotation(self, *, image_id: ImageId) -> IA:
         """
         Get the annotation for a given image. If an image has multiple annotations, this will throw an error.
         """
 
-        if sha256 is None:
-            sha256 = image_ref.sha256
-
-        image_ids = self._sha256_to_image_ids[sha256]
-        if len(image_ids) > 1:
-            warnings.warn(f"Image {sha256} has multiple annotations: {image_ids}. Returning the first one.")
-        image_id = image_ids[0]
         entry = self._image_id_to_annotation[image_id]
         return entry
 
+    def get_image_path(self, *, image_id: ImageId) -> Path:
+        return self.images_dir / self._image_id_to_relpath[image_id]
+
     def __len__(self) -> int:
-        return len(self.image_refs)
+        return len(self.image_ids)
 
     def __repr__(self):
         return f"{self.__class__.__name__}({len(self)})"

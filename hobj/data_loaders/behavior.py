@@ -53,7 +53,6 @@ class HumanLearningSession(pydantic.BaseModel):
 # %%
 def _load_learning_sessions(
         dataset_url: str,
-        redownload: bool
 ) -> List[HumanLearningSession]:
     data_store = default_data_store
     # Download the data:
@@ -72,7 +71,6 @@ def _load_learning_sessions(
 
 # %% Data loaders
 def load_highvar_behavior(
-        redownload: bool = False,
         remove_probe_trials: bool = True
 ) -> List[HumanLearningSession]:
     """
@@ -82,7 +80,6 @@ def load_highvar_behavior(
 
     sessions = _load_learning_sessions(
         dataset_url='https://hlbdatasets.s3.us-east-1.amazonaws.com/behavior/mutator-highvar-human-learning-data.json',
-        redownload=redownload
     )
 
     if not remove_probe_trials:

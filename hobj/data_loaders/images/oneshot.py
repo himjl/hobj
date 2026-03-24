@@ -1,4 +1,4 @@
-
+from pathlib import Path
 from typing import Literal
 
 import pydantic
@@ -47,6 +47,9 @@ class MutatorOneShotImageset(Imageset[MutatorOneShotAnnotation]):
     manifest_url = 'https://hlbdatasets.s3.us-east-1.amazonaws.com/imagesets/mutator-oneshot/mutator-oneshot-manifest.json'
     zipped_images_url = 'https://hlbdatasets.s3.us-east-1.amazonaws.com/imagesets/mutator-oneshot/MutatorB2000_Oneshot64.zip'
     annotation_schema = MutatorOneShotAnnotation
+
+    def __init__(self, cachedir: Path | None = None, redownload: bool = False):
+        super().__init__(cachedir=cachedir, redownload=redownload)
 
 
 if __name__ == '__main__':
