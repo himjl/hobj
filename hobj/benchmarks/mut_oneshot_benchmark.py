@@ -5,8 +5,8 @@ from typing import Dict, List
 from hobj.benchmarks.generalization.benchmark import GeneralizationBenchmarkConfig, GeneralizationBenchmark, GeneralizationSessionResult
 from hobj.benchmarks.generalization.estimator import GeneralizationStatistics
 from hobj.benchmarks.generalization.simulator import GeneralizationSubtask
-from hobj.loaders.behavior import load_oneshot_behavior
-from hobj.images import MutatorOneShotImageset
+from hobj.data_loaders.behavior import load_oneshot_behavior
+from hobj.data_loaders.images import MutatorOneShotImageset
 from mref import ImageRef
 
 

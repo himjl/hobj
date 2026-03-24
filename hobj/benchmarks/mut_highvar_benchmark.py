@@ -3,8 +3,8 @@ from typing import List, Dict
 
 from hobj.benchmarks.binary_classification.benchmark import LearningCurveBenchmark, LearningCurveBenchmarkConfig, TargetSubtaskData
 from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask, BinaryClassificationSubtaskResult
-from hobj.loaders.behavior import load_highvar_behavior
-from hobj.images import MutatorHighVarImageset
+from hobj.data_loaders.behavior import load_highvar_behavior
+from hobj.data_loaders.images import MutatorHighVarImageset
 
 
 # %%

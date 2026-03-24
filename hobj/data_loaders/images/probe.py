@@ -1,5 +1,5 @@
 
-from hobj.images.template import Imageset
+from hobj.data_loaders.images.template import Imageset
 import pydantic
 from typing import Literal
 
