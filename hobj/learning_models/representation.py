@@ -6,7 +6,6 @@ from hobj.types import ImageId
 
 
 # %%
-
 class RepresentationalModel:
     """
     Class which maps images to feature vectors of shape (d,).

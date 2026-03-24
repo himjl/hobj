@@ -6,8 +6,9 @@ from typing import Dict, List, Literal
 import mref
 import numpy as np
 
-import hobj.learning_models.linear.update_rules as update_rules
-from hobj.learning_models.linear import LinearLearner, RepresentationalModel
+import hobj.learning_models.update_rules as update_rules
+from hobj.learning_models.linear import RepresentationalModel
+from hobj.learning_models import LinearLearner
 
 
 # %%
