@@ -1,5 +1,5 @@
 import mref.media_references
-from hobj.data.images.template import Imageset, ImageManifestEntry, ImageManifest
+from hobj.data.images.template import Imageset
 import pydantic
 
 from typing import Dict, List

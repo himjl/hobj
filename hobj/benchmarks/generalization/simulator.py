@@ -1,5 +1,4 @@
-from dataclasses import dataclass
-from typing import List, Set, Union, Dict, Optional
+from typing import List, Union, Dict, Optional
 
 import numpy as np
 import pydantic
@@ -53,7 +52,7 @@ class GeneralizationSubtask(pydantic.BaseModel):
     def validate_model(self) -> 'GeneralizationSubtask':
 
         for ref in self.test_imagesA + self.test_imagesB:
-            if not ref in self.image_ref_to_transformation:
+            if ref not in self.image_ref_to_transformation:
                 raise ValueError(f"Expected all test images to have an associated transformation, but {ref} was missing.")
 
         return self

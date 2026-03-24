@@ -1,6 +1,6 @@
 import numpy as np
 
-from typing import Union, Dict, Callable, List
+from typing import Union, Dict, Callable
 import PIL.Image
 
 from mref import ImageRef

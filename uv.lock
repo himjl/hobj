@@ -153,7 +153,6 @@ version = "2.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "matplotlib" },
-    { name = "mref" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "pydantic" },
@@ -170,7 +169,6 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "matplotlib", specifier = ">=3.9" },
-    { name = "mref", git = "https://github.com/himjl/mref.git" },
     { name = "numpy", specifier = ">=2.2" },
     { name = "pandas", specifier = ">=2.2" },
     { name = "pydantic", specifier = ">=2.10" },
@@ -276,20 +274,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/f4/ff/da311c1e679eed54d3aed67754a4e859bd3b773060c2fa187962e60fcb85/matplotlib-3.9.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0a490715b3b9984fa609116481b22178348c1a220a4499cda79132000a79b4db", size = 8298411, upload-time = "2024-05-15T23:37:42.471Z" },
     { url = "https://files.pythonhosted.org/packages/db/8c/1014baa6776503914865d87e1e8a803ee9faa7b722ca5e655463b79c966e/matplotlib-3.9.0-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:8146ce83cbc5dc71c223a74a1996d446cd35cfb6a04b683e1446b7e6c73603b7", size = 8591196, upload-time = "2024-05-15T23:37:44.94Z" },
     { url = "https://files.pythonhosted.org/packages/17/91/febbb6c1063ae05a62fdbe038c2917b348b1b35f0482cee4738e6870a44a/matplotlib-3.9.0-cp312-cp312-win_amd64.whl", hash = "sha256:d91a4ffc587bacf5c4ce4ecfe4bcd23a4b675e76315f2866e588686cc97fccdf", size = 7968581, upload-time = "2024-05-15T23:37:47.839Z" },
-]
-
-[[package]]
-name = "mref"
-version = "0.0.2"
-source = { git = "https://github.com/himjl/mref.git#5b6f03d54184dec33aa81006dab3144b66f41c9d" }
-dependencies = [
-    { name = "matplotlib" },
-    { name = "numpy" },
-    { name = "pillow" },
-    { name = "pydantic" },
-    { name = "pytest" },
-    { name = "requests" },
-    { name = "tqdm" },
 ]
 
 [[package]]

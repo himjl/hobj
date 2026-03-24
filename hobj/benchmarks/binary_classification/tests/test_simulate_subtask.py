@@ -2,7 +2,6 @@ from hobj.benchmarks.binary_classification.simulation import BinaryClassificatio
 from hobj.learning_models import RandomGuesser
 from mref import ImageRef
 from typing import List
-import pytest
 import PIL.Image
 import numpy as np
 
