@@ -1,10 +1,11 @@
+from typing import Callable, Dict
+
 import numpy as np
 
-from typing import Union, Dict, Callable
-import PIL.Image
+from hobj.types import ImageId
 
-from mref import ImageRef
 
+# %%
 
 class RepresentationalModel:
     """
@@ -14,7 +15,7 @@ class RepresentationalModel:
     def __init__(
             self,
             d: int,
-            image_to_features_func: Callable[[Union[ImageRef, PIL.Image]], np.ndarray],
+            image_to_features_func: Callable[[ImageId], np.ndarray],
     ):
 
         if not isinstance(d, int):
@@ -32,7 +33,7 @@ class RepresentationalModel:
 
     def get_features(
             self,
-            image: Union[ImageRef, PIL.Image]
+            image: ImageId
     ) -> np.ndarray:
         """
         Returns a feature vector for the image_url.
@@ -52,7 +53,7 @@ class RepresentationalModel:
     @classmethod
     def from_precomputed_features(
             cls,
-            image_ref_to_features: Dict[ImageRef, np.ndarray]
+            image_ref_to_features: Dict[ImageId, np.ndarray]
     ) -> 'RepresentationalModel':
 
         """
@@ -61,12 +62,8 @@ class RepresentationalModel:
         If get_features is called with an ImageRef (or PIL.Image with an ImageRef) not in image_ref_to_features, a KeyError will be raised.
         """
 
-        def image_to_features_func(image: Union[ImageRef, PIL.Image]) -> np.ndarray:
-            if isinstance(image, PIL.Image.Image):
-                ref = ImageRef.from_image(image)
-            else:
-                ref = image
-            return image_ref_to_features[ref]
+        def image_to_features_func(image: ImageId) -> np.ndarray:
+            return image_ref_to_features[image]
 
         # Ensure all feature vectors are the same shape
         d = None

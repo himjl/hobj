@@ -1,10 +1,9 @@
 import typing
 from abc import ABC, abstractmethod
 
-import PIL.Image
 import numpy as np
 
-import mref.media_references
+from hobj.types import ImageId
 
 
 # %%
@@ -22,7 +21,7 @@ class BinaryLearningModel(ABC):
     @abstractmethod
     def get_response(
             self,
-            image: typing.Union[mref.media_references.ImageRef, PIL.Image],
+            image: ImageId,
     ) -> typing.Literal[0, 1]:
         """
         This function takes the current stimulus image (given either as a PIL.Image or a ImageRef) and returns one of two possible actions (parameterized by an integer).
@@ -54,7 +53,7 @@ class RandomGuesser(BinaryLearningModel):
 
     def get_response(
             self,
-            image: typing.Union[mref.media_references.ImageRef, PIL.Image],
+            image: ImageId,
     ) -> typing.Literal[0, 1]:
         action = self.random_generator.integers(2)
         action = int(action)

@@ -6,8 +6,9 @@ import mref.media_references
 from hobj.learning_models import BinaryLearningModel
 from hobj.learning_models.linear.representation import RepresentationalModel
 from hobj.learning_models.linear.update_rules import UpdateRule
+from hobj.types import ImageId
 
-
+# %%
 class LinearLearner(BinaryLearningModel):
     def __init__(
             self,
@@ -47,7 +48,7 @@ class LinearLearner(BinaryLearningModel):
 
     def get_response(
             self,
-            image: typing.Union[mref.media_references.ImageRef, PIL.Image]
+            image: ImageId,
     ) -> typing.Literal[0, 1]:
 
         f = self.representational_model.get_features(image=image)
