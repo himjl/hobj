@@ -23,6 +23,7 @@ dependencies = [
     "pydantic>=2.10",
     "xarray>=2025.1",
     "scipy>=1.17.1",
+    "ipykernel>=7.2.0",
 ]
 
 [dependency-groups]
