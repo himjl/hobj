@@ -23,8 +23,7 @@ def _get_calibration_image_ids() -> list[ImageId]:
 
 # %%
 def make_linear_learner_from_features(
-        features: np.ndarray,
-        image_ids: list[ImageId],
+        ref_to_features: dict[ImageId, np.ndarray],
         update_rule_name: Literal[
             'Prototype',
             'Square',
@@ -45,7 +44,6 @@ def make_linear_learner_from_features(
     :return: LinearLearner
     """
 
-    ref_to_features = {ref: features[i] for i, ref in enumerate(image_ids)}
     f_calibration = np.array([ref_to_features[ref] for ref in _get_calibration_image_ids()])
     mu_calibration = np.mean(f_calibration, axis=0)
     norms_calibration = np.linalg.norm(f_calibration - mu_calibration, axis=1)
