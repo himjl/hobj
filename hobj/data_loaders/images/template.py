@@ -1,14 +1,11 @@
-import json
 from abc import ABC
 from pathlib import Path
 from typing import Any, Dict, Generic, List, TypeVar
 
-import PIL.Image
+import pandas as pd
 import pydantic
 
 from hobj.types import ImageId
-from hobj.utils.file_io import download_file, download_json, unzip_file
-from hobj.utils.hash import hash_image
 
 
 # %%
@@ -39,31 +36,30 @@ class Imageset(Generic[IA], ABC):
     - Annotations on those images
     """
 
-    manifest_url: str
-    zipped_images_url: str
     annotation_schema: IA
 
     def __init__(
             self,
             cachedir: Path | None = None,
-            redownload=False,
-    ):
+            redownload: bool = False,
+    ) -> None:
         """
-        Download and materialize the imageset into a local cache directory.
+        Load a packaged imageset from the local cache directory.
         """
+        if redownload:
+            raise ValueError(
+                f"{self.__class__.__name__} no longer supports redownload; expected cached manifest.csv and images to already exist."
+            )
 
         repo_root = Path(__file__).resolve().parents[3]
         self.cachedir = (cachedir if cachedir is not None else repo_root / 'data').resolve()
-        self.cachedir.mkdir(parents=True, exist_ok=True)
-
-        self._dataset_dir = self.cachedir / self.__class__.__name__
-        self._dataset_dir.mkdir(parents=True, exist_ok=True)
+        self._dataset_dir = self.cachedir / 'images' / self.__class__.__name__
         self._images_dir = self._dataset_dir / 'images'
 
-        manifest_data = self._load_manifest_json(redownload=redownload)
-        image_manifest = ImageManifest(**manifest_data)
+        manifest_df = self._load_manifest_df()
+        image_manifest = self._parse_manifest_df(manifest_df=manifest_df)
         self._manifest = image_manifest
-        self._ensure_images_present(manifest=image_manifest, redownload=redownload)
+        self._ensure_images_present(manifest=image_manifest)
 
         self._image_id_to_annotation: Dict[ImageId, IA] = {}
         self._image_id_to_sha256: Dict[ImageId, str] = {}
@@ -76,18 +72,45 @@ class Imageset(Generic[IA], ABC):
             self._image_id_to_relpath[image_id] = entry.relpath
             self._image_id_to_annotation[image_id] = self.annotation_schema(**entry.annotation)
 
-    def _load_manifest_json(self, redownload: bool) -> dict[str, Any]:
-        if redownload or not self.manifest_path.exists():
-            manifest_data = download_json(self.manifest_url)
-            self.manifest_path.write_text(json.dumps(manifest_data, indent=2))
-        return json.loads(self.manifest_path.read_text())
+    @property
+    def annotation_column_names(self) -> list[str]:
+        return list(self.annotation_schema.model_fields.keys())
 
-    def _ensure_images_present(self, manifest: ImageManifest, redownload: bool = False) -> None:
-        """
-        Ensure the images for this imageset exist locally.
-        """
-        if redownload or not self._all_images_present(manifest):
-            self._download_and_extract_images(manifest)
+    def _load_manifest_df(self) -> pd.DataFrame:
+        if not self.manifest_path.exists():
+            raise FileNotFoundError(
+                f"Expected cached manifest.csv to already exist at: {self.manifest_path}"
+            )
+        return pd.read_csv(self.manifest_path)
+
+    def _parse_manifest_df(self, *, manifest_df: pd.DataFrame) -> ImageManifest:
+        required_columns = {'image_id', 'sha256', 'relpath', *self.annotation_column_names}
+        missing_columns = required_columns - set(manifest_df.columns)
+        if missing_columns:
+            raise ValueError(
+                f"{self.__class__.__name__} manifest.csv missing required columns: {sorted(missing_columns)}"
+            )
+
+        entries: Dict[ImageId, ImageManifestEntry] = {}
+        for _, row in manifest_df.iterrows():
+            image_id = str(row['image_id'])
+            annotation = {
+                column_name: row[column_name]
+                for column_name in self.annotation_column_names
+            }
+            entries[image_id] = ImageManifestEntry(
+                sha256=str(row['sha256']),
+                relpath=Path(str(row['relpath'])),
+                annotation=annotation,
+            )
+
+        return ImageManifest(entries=entries)
+
+    def _ensure_images_present(self, manifest: ImageManifest) -> None:
+        if not self._all_images_present(manifest):
+            raise FileNotFoundError(
+                f"Expected packaged images to already exist under: {self.images_dir}"
+            )
 
     def _all_images_present(self, manifest: ImageManifest) -> bool:
         for entry in manifest.entries.values():
@@ -95,42 +118,9 @@ class Imageset(Generic[IA], ABC):
                 return False
         return True
 
-    def _download_and_extract_images(self, manifest: ImageManifest) -> None:
-        self._dataset_dir.mkdir(parents=True, exist_ok=True)
-        if self._images_dir.exists():
-            for path in sorted(self._images_dir.rglob('*'), reverse=True):
-                if path.is_file():
-                    path.unlink()
-                elif path.is_dir():
-                    path.rmdir()
-            self._images_dir.rmdir()
-
-        download_file(self.zipped_images_url, self.archive_path)
-        unzip_file(zip_path=self.archive_path, output_dir=self._images_dir)
-        self._verify_images(manifest)
-
-    def _verify_images(self, manifest: ImageManifest) -> None:
-        for image_id, entry in manifest.entries.items():
-            image_path = self._images_dir / entry.relpath
-            if not image_path.exists():
-                raise FileNotFoundError(f"Missing image file for {image_id}: {image_path}")
-
-            with PIL.Image.open(image_path) as image_data:
-                observed_sha256 = hash_image(image_data)
-
-            if observed_sha256 != entry.sha256:
-                raise ValueError(
-                    f"SHA256 mismatch for image {image_id}: {observed_sha256} != {entry.sha256}"
-                )
-
     @property
     def manifest_path(self) -> Path:
-        return self._dataset_dir / 'manifest.json'
-
-    @property
-    def archive_path(self) -> Path:
-        archive_name = Path(self.zipped_images_url).name
-        return self._dataset_dir / archive_name
+        return self._dataset_dir / 'manifest.csv'
 
     @property
     def images_dir(self) -> Path:

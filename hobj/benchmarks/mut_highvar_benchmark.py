@@ -87,6 +87,7 @@ class MutatorHighVarBenchmark(LearningCurveBenchmark):
             config=config
         )
 
+# %%
 if __name__ == '__main__':
     experiment = MutatorHighVarBenchmark()
     print(sorted(experiment.config.subtask_name_to_data.keys()))

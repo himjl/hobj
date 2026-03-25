@@ -15,8 +15,6 @@ class ProbeImageset(Imageset[ProbeAnnotation]):
     """
     An imageset consisting of two images: a
     """
-    manifest_url = 'https://hlbdatasets.s3.us-east-1.amazonaws.com/imagesets/probe-images/probe-images-manifest.json'
-    zipped_images_url = 'https://hlbdatasets.s3.us-east-1.amazonaws.com/imagesets/probe-images/probe-images.zip'
     annotation_schema = ProbeAnnotation
 
 # %%

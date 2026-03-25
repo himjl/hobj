@@ -14,11 +14,8 @@ class MutatorWarmupAnnotation(pydantic.BaseModel):
 
 
 class MutatorWarmupImageset(Imageset[MutatorWarmupAnnotation]):
-    manifest_url = 'https://hlbdatasets.s3.us-east-1.amazonaws.com/imagesets/mutator-warmup/mutator-warmup-manifest.json'
-    zipped_images_url = 'https://hlbdatasets.s3.us-east-1.amazonaws.com/imagesets/mutator-warmup/MutatorWarmup.zip'
     annotation_schema = MutatorWarmupAnnotation
 
 
 if __name__ == '__main__':
-
-    imageset = MutatorWarmupImageset(redownload=True)
+    imageset = MutatorWarmupImageset()

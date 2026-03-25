@@ -18,8 +18,6 @@ class MutatorHighVarAnnotation(pydantic.BaseModel):
 
 
 class MutatorHighVarImageset(Imageset[MutatorHighVarAnnotation]):
-    manifest_url = 'https://hlbdatasets.s3.us-east-1.amazonaws.com/imagesets/mutator-highvar/mutator-highvar-manifest.json'
-    zipped_images_url = 'https://hlbdatasets.s3.us-east-1.amazonaws.com/imagesets/mutator-highvar/MutatorB2000_Subset128_FullVar_Train.zip'
     annotation_schema = MutatorHighVarAnnotation
 
     def __init__(self, cachedir: Path | None = None, redownload: bool = False):
