@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from typing import List, Literal
 
+import pandas as pd
 import pydantic
 
 from hobj.utils.file_io import download_json
@@ -83,41 +84,46 @@ def load_highvar_behavior(
         remove_probe_trials: bool = True,
         cachedir: Path | None = None,
         redownload: bool = False,
-) -> List[HumanLearningSession]:
+) -> pd.DataFrame:
     """
-    Load the "raw" human learning data from Experiment 1 of Lee and DiCarlo 2023.
+    Load the trial-level human learning data from Experiment 1 of Lee and DiCarlo 2023.
     :return:
     """
+    if redownload:
+        raise ValueError("load_highvar_behavior no longer supports redownload; expected cached CSV artifact instead.")
 
-    sessions = _load_learning_sessions(
-        dataset_url='https://hlbdatasets.s3.us-east-1.amazonaws.com/behavior/mutator-highvar-human-learning-data.json',
-        cache_filename='mutator-highvar-human-learning-data.json',
-        cachedir=cachedir,
-        redownload=redownload,
-    )
-
-    if not remove_probe_trials:
-        return sessions
-
-    def filter(vals: list):
-        probe_trials = {25, 51, 77, 103}
-        return [vals[i] for i in range(len(vals)) if i not in probe_trials]
-
-    filtered_sessions = []
-    for session in sessions:
-        # Filter out indices in probe_trials
-        filtered_session = HumanLearningSession(
-            worker_id=session.worker_id,
-            stimulus_sha256_seq=filter(session.stimulus_sha256_seq),
-            stimulus_duration_msec_seq=filter(session.stimulus_duration_msec_seq),
-            action_seq=filter(session.action_seq),
-            reward_seq=filter(session.reward_seq),
-            timestamp_start_seq=filter(session.timestamp_start_seq)
+    repo_root = Path(__file__).resolve().parents[2]
+    cache_root = (cachedir if cachedir is not None else repo_root / 'data').resolve()
+    dataset_path = cache_root / 'behavior' / 'human-behavior-highvar-tasks.csv'
+    if not dataset_path.exists():
+        raise FileNotFoundError(
+            "Expected cached highvar behavior CSV to already exist at:\n"
+            f"  - {dataset_path}"
         )
 
-        filtered_sessions.append(filtered_session)
+    df = pd.read_csv(dataset_path)
 
-    return filtered_sessions
+    required_columns = {
+        'trial',
+        'assignment_id',
+        'worker_id',
+        'subtask',
+        'stimulus_id',
+        'is_probe_trial',
+        'stimulus_duration_msec',
+        'reaction_time_msec',
+        'timed_out',
+        'perf',
+        'timestamp_start',
+    }
+    missing_columns = required_columns - set(df.columns)
+    if missing_columns:
+        raise ValueError(f"Highvar behavior CSV missing required columns: {sorted(missing_columns)}")
+
+    if remove_probe_trials:
+        df = df.loc[~df['is_probe_trial']].copy()
+
+    return df
 
 
 def load_oneshot_behavior(

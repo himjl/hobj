@@ -21,23 +21,24 @@ class MutatorHighVarBenchmark(LearningCurveBenchmark):
         sessions = load_highvar_behavior(remove_probe_trials=True)
 
         # Normalize data for benchmark:
-        sha256_to_category = {
-            ref.sha256: imageset.get_annotation(image_id=ref).category for ref in imageset.image_ids
+        stimulus_id_to_category = {
+            image_id: imageset.get_annotation(image_id=image_id).category for image_id in imageset.image_ids
         }
 
         subtask_name_to_results = {}
         subtask_name_to_subtask = {}
 
         # Iterate over worker sessions:
-        for session in sessions:
+        for assignment_id, session in sessions.groupby('assignment_id', sort=False):
 
             categories = set()
             perf_seq: List[bool] = []
 
             # Iterate over trials:
-            for i_trial, (reward, sha256) in enumerate(zip(session.reward_seq, session.stimulus_sha256_seq)):
-                categories.add(sha256_to_category[sha256])
-                perf_seq.append(reward > 0)
+            session = session.sort_values('trial')
+            for reward, stimulus_id in zip(session.perf, session.stimulus_id):
+                categories.add(stimulus_id_to_category[stimulus_id])
+                perf_seq.append(bool(reward))
 
             # Infer subtask from the categories observed in the session:
             assert len(categories) == 2, f"Expected two categories, but got {categories}"
@@ -58,7 +59,7 @@ class MutatorHighVarBenchmark(LearningCurveBenchmark):
             subtask_name_to_results[subtask_name].append(
                 BinaryClassificationSubtaskResult(
                     perf_seq = np.array(perf_seq),
-                    worker_id = session.worker_id
+                    worker_id = session.worker_id.iloc[0]
                 )
             )
 

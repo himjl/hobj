@@ -2,8 +2,8 @@ from hobj.data_loaders.behavior import load_highvar_behavior, load_oneshot_behav
 
 
 def test_load_highvar():
-    sessions = load_highvar_behavior()
-    assert len(sessions) == 3199
+    df = load_highvar_behavior()
+    assert len(df) == 3199 * 100
 
 
 def test_load_oneshot():
