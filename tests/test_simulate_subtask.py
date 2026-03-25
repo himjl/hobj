@@ -1,6 +1,5 @@
 from typing import List
 
-import PIL.Image
 import numpy as np
 
 from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask
