@@ -18,7 +18,9 @@ def _get_calibration_image_ids() -> list[ImageId]:
     Returns the ImageIds of the warmup images that are used for calibrating the features of the linear learner.
     Caches the result to avoid redundant computation.
     """
-    raise NotImplementedError
+    from hobj.data_loaders.images.warmup import MutatorWarmupImageset
+    imageset = MutatorWarmupImageset()
+    return sorted(imageset.image_ids)
 
 
 # %%

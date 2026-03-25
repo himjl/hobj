@@ -40,6 +40,7 @@ class MutatorHighVarImageset(Imageset[MutatorHighVarAnnotation]):
         return self._category_to_image_ids
 
 
+# %%
 if __name__ == '__main__':
 
     imageset = MutatorHighVarImageset()
