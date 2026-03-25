@@ -7,5 +7,5 @@ def test_load_highvar():
 
 
 def test_load_oneshot():
-    sessions = load_oneshot_behavior()
-    assert len(sessions) == 2547
+    df = load_oneshot_behavior()
+    assert len(df) == 2547 * 20

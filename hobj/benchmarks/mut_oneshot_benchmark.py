@@ -1,5 +1,4 @@
 import collections
-# Coercing human data
 from typing import Dict, List
 
 from hobj.benchmarks.generalization.benchmark import GeneralizationBenchmark, GeneralizationBenchmarkConfig, GeneralizationSessionResult
@@ -136,26 +135,22 @@ class MutatorOneshotBenchmark(GeneralizationBenchmark):
             subtasks.append(subtask)
 
         # Package human data into format expected by benchmark
-        oneshot_sessions = load_oneshot_behavior()
+        oneshot_df = load_oneshot_behavior()
 
         results = []
 
-        for session in oneshot_sessions:
-            # Parse raw data by worker
+        for session_id, session_df in oneshot_df.groupby("session_id", sort=False):
+            session_df = session_df.sort_values("trial")
             transformation_to_kn = collections.defaultdict(lambda: [0, 0])
             kcatch = 0
             ncatch = 0
-            observed_categories = set()
+            observed_categories = set(session_df["subtask"].iloc[0].split(","))
 
-            for i_trial, sha in enumerate(session.stimulus_sha256_seq):
-                image_id = sha
+            for _, row in session_df.iterrows():
+                i_trial = int(row["trial"])
+                image_id = row["stimulus_id"]
                 annotation = imageset.get_annotation(image_id=image_id)
-
-                # Add stimulus category to observed categories
-                observed_categories.add(annotation.category)
-
-                # Calculate performance
-                perf = session.reward_seq[i_trial] > 0
+                perf = bool(row["perf"])
 
                 # Record performance in relevant slot
                 if i_trial in support_trials:
@@ -184,7 +179,7 @@ class MutatorOneshotBenchmark(GeneralizationBenchmark):
                 transformation_to_kn=transformation_to_kn,
                 kcatch=kcatch,
                 ncatch=ncatch,
-                worker_id=session.worker_id
+                worker_id=session_df["worker_id"].iloc[0]
             )
             results.append(result)
 
@@ -211,4 +206,3 @@ class MutatorOneshotBenchmark(GeneralizationBenchmark):
 
 if __name__ == '__main__':
     benchmark = MutatorOneshotBenchmark()
-
