@@ -21,7 +21,7 @@ import hobj
 model = hobj.learning_models.RandomGuesser() # A subclass of BinaryLearningModel
 
 # Load benchmark:
-benchmark = hobj.benchmarks.MutatorHighVarBenchmark() # Try benchmark 2: hobj.benchmarks.MutatorOneshotBenchmark()
+benchmark = hobj.MutatorHighVarBenchmark() # Try benchmark 2: hobj.MutatorOneshotBenchmark()
 result = benchmark(model)
 
 # Print the score and its CI:
