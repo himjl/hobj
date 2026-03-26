@@ -4,7 +4,9 @@ from typing import Dict, List, Tuple
 import numpy as np
 import xarray as xr
 
-from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtaskResult
+from hobj.benchmarks.binary_classification.simulation import (
+    BinaryClassificationSubtaskResult,
+)
 from hobj.stats import binomial as binomial_funcs
 
 
@@ -13,10 +15,10 @@ class LearningCurveStatistics(xr.Dataset):
     __slots__ = ()
 
     def __init__(
-            self,
-            subtask_name_to_results: Dict[str, List[BinaryClassificationSubtaskResult]],
-            nbootstrap_samples: int,
-            bootstrap_by_worker: bool,  # versus by session
+        self,
+        subtask_name_to_results: Dict[str, List[BinaryClassificationSubtaskResult]],
+        nbootstrap_samples: int,
+        bootstrap_by_worker: bool,  # versus by session
     ):
         # Get canonical order of subtask names
         subtask_names = sorted(subtask_name_to_results.keys())
@@ -34,7 +36,9 @@ class LearningCurveStatistics(xr.Dataset):
                 all_workers.add(r.worker_id)
 
         if not len(ntrials_observed) == 1:
-            raise ValueError(f"Expected all subtasks to have the same number of trials, but got {ntrials_observed}")
+            raise ValueError(
+                f"Expected all subtasks to have the same number of trials, but got {ntrials_observed}"
+            )
         ntrials = ntrials_observed.pop()
         all_workers = sorted(all_workers)
         worker_to_i = {worker: i for i, worker in enumerate(all_workers)}
@@ -68,14 +72,14 @@ class LearningCurveStatistics(xr.Dataset):
         if bootstrap_by_worker:
             bootstrap_resamples = self._get_bootstrap_resamples_by_worker(
                 perf_mat=perf_mat,
-                i_subtasks = i_subtasks,
-                i_workers = i_workers,
+                i_subtasks=i_subtasks,
+                i_workers=i_workers,
                 nbootstrap_samples=nbootstrap_samples,
             )
         else:
             bootstrap_resamples = self._get_bootstrap_resamples_by_session(
                 perf_mat=perf_mat,
-                i_subtasks = i_subtasks,
+                i_subtasks=i_subtasks,
                 nbootstrap_samples=nbootstrap_samples,
             )
 
@@ -87,23 +91,25 @@ class LearningCurveStatistics(xr.Dataset):
 
         super().__init__(
             data_vars=dict(
-                phat=(['subtask', 'trial'], phat),
-                varhat_phat=(['subtask', 'trial'], varhat_phat),
-                boot_phat=(['boot_iter', 'subtask', 'trial'], boot_phat),
-                boot_varhat_phat=(['boot_iter', 'subtask', 'trial'], boot_varhat_phat),
+                phat=(["subtask", "trial"], phat),
+                varhat_phat=(["subtask", "trial"], varhat_phat),
+                boot_phat=(["boot_iter", "subtask", "trial"], boot_phat),
+                boot_varhat_phat=(["boot_iter", "subtask", "trial"], boot_varhat_phat),
             ),
             coords=dict(
                 subtask=subtask_names,
-            )
+            ),
         )
 
     @staticmethod
     def get_point_estimates(
-            k: np.ndarray,
-            n: np.ndarray,
+        k: np.ndarray,
+        n: np.ndarray,
     ) -> Tuple[np.ndarray, np.ndarray]:
         phat = k / n
-        varhat_phat = binomial_funcs.estimate_variance_of_binomial_proportion(kvec=k, nvec=n)
+        varhat_phat = binomial_funcs.estimate_variance_of_binomial_proportion(
+            kvec=k, nvec=n
+        )
         return phat, varhat_phat
 
     @dataclass
@@ -113,24 +119,29 @@ class LearningCurveStatistics(xr.Dataset):
 
     @staticmethod
     def _get_bootstrap_resamples_by_worker(
-            perf_mat: np.ndarray, # [session, trial]
-            i_subtasks: List[int], # [session]
-            i_workers: List[int], # [session]
-            nbootstrap_samples: int,
+        perf_mat: np.ndarray,  # [session, trial]
+        i_subtasks: List[int],  # [session]
+        i_workers: List[int],  # [session]
+        nbootstrap_samples: int,
     ) -> BootstrapSamples:
-
         if not perf_mat.dtype == np.bool:
-            raise ValueError(f"Expected perf_mat to have dtype bool, but got {perf_mat.dtype}")
+            raise ValueError(
+                f"Expected perf_mat to have dtype bool, but got {perf_mat.dtype}"
+            )
 
         ntrials = perf_mat.shape[1]
         nworkers = max(i_workers) + 1
         nsubtasks = max(i_subtasks) + 1
 
         if not len(set(i_subtasks)) == nsubtasks:
-            raise ValueError(f"Expected i_subtasks to be a contiguous range, but got {set(i_subtasks)}")
+            raise ValueError(
+                f"Expected i_subtasks to be a contiguous range, but got {set(i_subtasks)}"
+            )
 
         if not len(set(i_workers)) == nworkers:
-            raise ValueError(f"Expected i_workers to be a contiguous range, but got {set(i_workers)}")
+            raise ValueError(
+                f"Expected i_workers to be a contiguous range, but got {set(i_workers)}"
+            )
 
         # Reshape data
         perf_table = np.zeros(shape=(nworkers, nsubtasks, ntrials), dtype=np.bool)
@@ -157,9 +168,9 @@ class LearningCurveStatistics(xr.Dataset):
 
     @staticmethod
     def _get_bootstrap_resamples_by_session(
-            perf_mat: np.ndarray,  # [session, trial]
-            i_subtasks: List[int], # [session]
-            nbootstrap_samples: int,
+        perf_mat: np.ndarray,  # [session, trial]
+        i_subtasks: List[int],  # [session]
+        nbootstrap_samples: int,
     ) -> BootstrapSamples:
         # Bootstrap by session, within each subtask
 
@@ -167,7 +178,9 @@ class LearningCurveStatistics(xr.Dataset):
         nsubtasks = max(i_subtasks) + 1
 
         if not len(set(i_subtasks)) == nsubtasks:
-            raise ValueError(f"Expected i_subtasks to be a contiguous range, but got {set(i_subtasks)}")
+            raise ValueError(
+                f"Expected i_subtasks to be a contiguous range, but got {set(i_subtasks)}"
+            )
 
         # Reshape data to {i_subtask: [session, trial]}
         i_subtask_to_perf_data = {}
@@ -178,7 +191,9 @@ class LearningCurveStatistics(xr.Dataset):
 
         # Cast to np arrays
         for i_subtask in i_subtask_to_perf_data:
-            i_subtask_to_perf_data[i_subtask] = np.array(i_subtask_to_perf_data[i_subtask], dtype = np.bool)
+            i_subtask_to_perf_data[i_subtask] = np.array(
+                i_subtask_to_perf_data[i_subtask], dtype=np.bool
+            )
 
         # Perform bootstrapping
         gen = np.random.default_rng()
@@ -187,8 +202,12 @@ class LearningCurveStatistics(xr.Dataset):
         for i_bootstrap in range(nbootstrap_samples):
             for i_subtask in range(nsubtasks):
                 nsessions_for_subtask = len(i_subtask_to_perf_data[i_subtask])
-                i_sessions = gen.integers(low=0, high=nsessions_for_subtask, size=nsessions_for_subtask)
-                boot_k[i_bootstrap, i_subtask] = i_subtask_to_perf_data[i_subtask][i_sessions].sum(axis=0)
+                i_sessions = gen.integers(
+                    low=0, high=nsessions_for_subtask, size=nsessions_for_subtask
+                )
+                boot_k[i_bootstrap, i_subtask] = i_subtask_to_perf_data[i_subtask][
+                    i_sessions
+                ].sum(axis=0)
                 boot_n[i_bootstrap, i_subtask] = len(i_sessions)
 
         return LearningCurveStatistics.BootstrapSamples(

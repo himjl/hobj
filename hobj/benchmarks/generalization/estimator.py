@@ -12,20 +12,21 @@ class GeneralizationStatistics(xr.Dataset):
     __slots__ = ()
 
     def __init__(
-            self,
-            results: List[GeneralizationSessionResult],
-            perform_lapse_rate_correction: bool,
-            n_bootstrap_iterations: int,
-            bootstrap_by_worker: bool, # versus by session
+        self,
+        results: List[GeneralizationSessionResult],
+        perform_lapse_rate_correction: bool,
+        n_bootstrap_iterations: int,
+        bootstrap_by_worker: bool,  # versus by session
     ):
-
         # Get all transformations
         all_transformations = set()
         for result in results:
             all_transformations.update(result.transformation_to_kn.keys())
 
         all_transformations = sorted(all_transformations)
-        transformation_to_i = {transformation: i for i, transformation in enumerate(all_transformations)}
+        transformation_to_i = {
+            transformation: i for i, transformation in enumerate(all_transformations)
+        }
 
         # Get all workers
         all_workers = sorted({result.worker_id for result in results})
@@ -38,9 +39,13 @@ class GeneralizationStatistics(xr.Dataset):
 
         if bootstrap_by_worker:
             if nworkers == 1:
-                raise ValueError(f"Only one worker {all_workers}, cannot perform valid bootstrap by worker.")
+                raise ValueError(
+                    f"Only one worker {all_workers}, cannot perform valid bootstrap by worker."
+                )
             elif nworkers < 20:
-                warnings.warn(f"Only {nworkers} unique workers, which is less than 20. Bootstrapping by worker may not be reliable.")
+                warnings.warn(
+                    f"Only {nworkers} unique workers, which is less than 20. Bootstrapping by worker may not be reliable."
+                )
 
             kmat = np.zeros(shape=(nworkers, ntransformations))
             nmat = np.zeros(shape=(nworkers, ntransformations))
@@ -78,7 +83,6 @@ class GeneralizationStatistics(xr.Dataset):
         boot_varhat_phat = np.zeros(shape=(n_bootstrap_iterations, ntransformations))
 
         for i_boot_iter in range(n_bootstrap_iterations):
-
             if bootstrap_by_worker:
                 # Resample by worker
                 i_boot = gen.integers(low=0, high=nworkers, size=nworkers)
@@ -105,27 +109,26 @@ class GeneralizationStatistics(xr.Dataset):
 
         super().__init__(
             data_vars=dict(
-                phat=(['transformation'], phat),
-                varhat_phat=(['transformation'], varhat_phat),
-                boot_phat=(['boot_iter', 'transformation'], boot_phat),
-                boot_varhat_phat=(['boot_iter', 'transformation'], boot_varhat_phat),
+                phat=(["transformation"], phat),
+                varhat_phat=(["transformation"], varhat_phat),
+                boot_phat=(["boot_iter", "transformation"], boot_phat),
+                boot_varhat_phat=(["boot_iter", "transformation"], boot_varhat_phat),
             ),
-            coords=dict(
-                transformation=all_transformations
-            )
+            coords=dict(transformation=all_transformations),
         )
 
     @staticmethod
     def _get_point_estimates(
-            k: np.ndarray,  # [transformation]
-            n: np.ndarray,  # [transformation]
-            kcatch: np.ndarray,  # ()
-            ncatch: np.ndarray,  # ()
-            perform_lapse_rate_correction: bool,
+        k: np.ndarray,  # [transformation]
+        n: np.ndarray,  # [transformation]
+        kcatch: np.ndarray,  # ()
+        ncatch: np.ndarray,  # ()
+        perform_lapse_rate_correction: bool,
     ):
-
         phat = k / n
-        varhat_phat = binomial_funcs.estimate_variance_of_binomial_proportion(kvec=k, nvec=n)
+        varhat_phat = binomial_funcs.estimate_variance_of_binomial_proportion(
+            kvec=k, nvec=n
+        )
 
         if perform_lapse_rate_correction:
             # Return an estimate of the performance that would be expected if the system had a lapse rate of 0.

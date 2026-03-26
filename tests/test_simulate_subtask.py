@@ -1,6 +1,5 @@
 from typing import List
 
-import PIL.Image
 import numpy as np
 
 from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask
@@ -12,7 +11,7 @@ def create_image_refs(nimages_per_class: int, seed: int) -> List[ImageId]:
     images = []
     np.random.seed(seed)
     for i in range(nimages_per_class):
-        images.append(f'seed{seed}_image{i}')
+        images.append(f"seed{seed}_image{i}")
 
     return images
 
@@ -30,9 +29,6 @@ def test_simulate_subtask():
 
     learner = RandomGuesser(seed=0)
 
-    result = subtask.simulate_session(
-        learner=learner,
-        seed=0
-    )
+    result = subtask.simulate_session(learner=learner, seed=0)
 
     assert len(result.perf_seq) == ntrials

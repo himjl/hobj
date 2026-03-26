@@ -5,6 +5,7 @@ on:
     paths:
       # Changes to source code
       - hobj/**
+      - test/**.py
       # Changes to workflows
       - .github/workflows/ci.yml
       # Changes to project/dependency metadata

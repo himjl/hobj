@@ -7,6 +7,7 @@ import pydantic
 from hobj.learning_models import BinaryLearningModel
 from hobj.types import ImageId
 
+
 # %%
 class GeneralizationSessionResult(pydantic.BaseModel):
     transformation_to_kn: Dict[str, List[int]]
@@ -14,15 +15,19 @@ class GeneralizationSessionResult(pydantic.BaseModel):
     ncatch: int
     worker_id: Optional[str] = pydantic.Field(default="NO_WORKER")
 
-    @pydantic.model_validator(mode='after')
-    def validate_results(self) -> 'GeneralizationSessionResult':
+    @pydantic.model_validator(mode="after")
+    def validate_results(self) -> "GeneralizationSessionResult":
         for transformation in self.transformation_to_kn:
             k, n = self.transformation_to_kn[transformation]
             if k < 0 or n < 0 or k > n:
-                raise ValueError(f"Got invalid Binomial parameters k={k}, n={n} for transformation {transformation}")
+                raise ValueError(
+                    f"Got invalid Binomial parameters k={k}, n={n} for transformation {transformation}"
+                )
 
         if self.kcatch < 0 or self.ncatch < 0 or self.kcatch > self.ncatch:
-            raise ValueError(f"Got invalid Binomial parameters k={self.kcatch}, n={self.ncatch} for catch trials")
+            raise ValueError(
+                f"Got invalid Binomial parameters k={self.kcatch}, n={self.ncatch} for catch trials"
+            )
 
         return self
 
@@ -32,9 +37,7 @@ class GeneralizationSubtask(pydantic.BaseModel):
     A simulator for a single session of the specific "one-shot" task used in Lee and DiCarlo 2023.
     """
 
-    model_config = dict(
-        frozen=True
-    )
+    model_config = dict(frozen=True)
 
     support_imageA: ImageId
     support_imageB: ImageId
@@ -42,24 +45,25 @@ class GeneralizationSubtask(pydantic.BaseModel):
     test_imagesB: List[ImageId]
     image_ref_to_transformation: Dict[ImageId, str]
 
-    @pydantic.field_validator('test_imagesA', 'test_imagesB', mode='after')
+    @pydantic.field_validator("test_imagesA", "test_imagesB", mode="after")
     @classmethod
     def sort_image_refs(cls, value: List[ImageId]) -> List[ImageId]:
         return sorted(value)
 
-    @pydantic.model_validator(mode='after')
-    def validate_model(self) -> 'GeneralizationSubtask':
-
+    @pydantic.model_validator(mode="after")
+    def validate_model(self) -> "GeneralizationSubtask":
         for ref in self.test_imagesA + self.test_imagesB:
             if ref not in self.image_ref_to_transformation:
-                raise ValueError(f"Expected all test images to have an associated transformation, but {ref} was missing.")
+                raise ValueError(
+                    f"Expected all test images to have an associated transformation, but {ref} was missing."
+                )
 
         return self
 
     def simulate_session(
-            self,
-            learner: BinaryLearningModel,
-            seed: Union[int, None],
+        self,
+        learner: BinaryLearningModel,
+        seed: Union[int, None],
     ) -> GeneralizationSessionResult:
         """
         Convenience method to simulate a session of the one-shot task on a given BinaryLearningModel.
@@ -84,7 +88,9 @@ class GeneralizationSubtask(pydantic.BaseModel):
 
         # An initial phase of 10 support trials, with classes sampled in equal number (5 each)
         support_sequence = [True] * 5 + [False] * 5
-        support_sequence = [support_sequence[i] for i in gen.permutation(len(support_sequence))]
+        support_sequence = [
+            support_sequence[i] for i in gen.permutation(len(support_sequence))
+        ]
         stimulus_category_is_A_seq.extend(support_sequence)
 
         # A testing phase of 8 test trials with 2 catch trials, where classes are sampled i.i.d.
@@ -104,11 +110,19 @@ class GeneralizationSubtask(pydantic.BaseModel):
         for i_trial in range(ntrials):
             # Retrieve trial information
             stimulus_category_is_A = stimulus_category_is_A_seq[i_trial]
-            correct_action_cur = classA_correct_action if stimulus_category_is_A else classB_correct_action
+            correct_action_cur = (
+                classA_correct_action
+                if stimulus_category_is_A
+                else classB_correct_action
+            )
 
             if i_trial in support_trials or i_trial in catch_trials:
                 # Supply a support image
-                image_ref_cur = self.support_imageA if stimulus_category_is_A else self.support_imageB
+                image_ref_cur = (
+                    self.support_imageA
+                    if stimulus_category_is_A
+                    else self.support_imageB
+                )
 
             else:
                 # Sample a test image without replacement
@@ -123,7 +137,7 @@ class GeneralizationSubtask(pydantic.BaseModel):
 
             # Calculate feedback based on response
             correct = a == correct_action_cur
-            feedback = 1. if correct else -1.
+            feedback = 1.0 if correct else -1.0
 
             # Deliver feedback to learner
             learner.give_feedback(feedback)
@@ -140,7 +154,5 @@ class GeneralizationSubtask(pydantic.BaseModel):
                 transformation_to_kn[transformation_cur][1] += 1
 
         return GeneralizationSessionResult(
-            transformation_to_kn=transformation_to_kn,
-            kcatch=kcatch,
-            ncatch=ncatch
+            transformation_to_kn=transformation_to_kn, kcatch=kcatch, ncatch=ncatch
         )
