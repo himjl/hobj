@@ -25,4 +25,6 @@ __all__ = [
     # Benchmarks:
     "MutatorHighVarBenchmark",
     "MutatorOneshotBenchmark",
+    # Learning model loader:
+    ...,
 ]

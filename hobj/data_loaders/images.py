@@ -1,19 +1,26 @@
 """Load packaged image manifests and images."""
 
+from functools import lru_cache
 from pathlib import Path
 
 import pandas as pd
-from hobj.types import ImageId
 from PIL import Image
-from functools import lru_cache
+
+from hobj.data_loaders.download import resolve_data_root
+from hobj.types import ImageId
 
 
-@lru_cache(maxsize=1)
-def _image_id_to_local_path_table() -> dict[ImageId, Path]:
-    """Build a mapping from image_id to absolute local path for all packaged images."""
-    repo_root = Path(__file__).resolve().parents[2]
-    cache_root = repo_root / "data"
-    manifest_paths = list(cache_root.glob("meta-*.csv"))
+@lru_cache(maxsize=None)
+def _image_id_to_local_path_table(cache_root: Path) -> dict[ImageId, Path]:
+    """Build a mapping from image ID to absolute local path.
+
+    Args:
+        cache_root: Directory containing the packaged image manifests.
+
+    Returns:
+        A mapping from image ID to absolute image path.
+    """
+    manifest_paths = sorted(cache_root.glob("meta-*.csv"))
     table = {}
     for manifest_path in manifest_paths:
         manifest_df = pd.read_csv(manifest_path)
@@ -25,13 +32,27 @@ def _image_id_to_local_path_table() -> dict[ImageId, Path]:
     return table
 
 
-def load_image(image_id: ImageId) -> Image.Image:
-    """Load an image by ``image_id`` from the packaged dataset."""
-    path = _image_id_to_local_path_table().get(image_id)
+def load_image(
+    image_id: ImageId,
+    cachedir: Path | None = None,
+) -> Image.Image:
+    """Load an image by ``image_id`` from the packaged dataset.
+
+    Args:
+        image_id: ID of the image to load.
+        cachedir: Optional directory containing the packaged ``data`` tree.
+
+    Returns:
+        The requested image.
+    """
+    cache_root = resolve_data_root(cachedir=cachedir)
+    path = _image_id_to_local_path_table(cache_root).get(image_id)
     if path is None:
         raise ValueError(f"Image ID not found in any manifest: {image_id}")
     if not path.exists():
-        raise FileNotFoundError(f"Expected image file to already exist at: {path}")
+        raise FileNotFoundError(
+            f"Expected image file to exist after resolving packaged data at: {path}"
+        )
     return Image.open(path)
 
 
@@ -55,13 +76,13 @@ def _load_image_manifest(
         ValueError: If required columns are missing.
         FileNotFoundError: If the packaged manifest or images are missing.
     """
-    repo_root = Path(__file__).resolve().parents[2]
-    cache_root = (cachedir if cachedir is not None else repo_root / "data").resolve()
+    cache_root = resolve_data_root(cachedir=cachedir)
     manifest_path = cache_root / f"meta-{dataset_name}.csv"
 
     if not manifest_path.exists():
         raise FileNotFoundError(
-            f"Expected cached image manifest to already exist at: {manifest_path}"
+            "Expected image manifest to exist after resolving packaged data at: "
+            f"{manifest_path}"
         )
 
     manifest_df = pd.read_csv(manifest_path)
@@ -74,11 +95,12 @@ def _load_image_manifest(
 
     manifest_df = manifest_df.copy()
     missing_paths = manifest_df.loc[
-        ~manifest_df["relpath"].map(lambda p: Path.exists(cache_root / p)), "relpath"
+        ~manifest_df["relpath"].map(lambda p: (cache_root / p).exists()), "relpath"
     ]
     if not missing_paths.empty:
         raise FileNotFoundError(
-            "Expected packaged images to already exist under:\n"
+            "Expected packaged images to exist after resolving packaged data "
+            "under:\n"
             f"First missing path: {missing_paths.iloc[0]}"
         )
 

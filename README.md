@@ -28,6 +28,10 @@ result = benchmark(model)
 print(result.msen, result.msen_CI95)
 ```
 
+On first use, the packaged dataset is downloaded automatically into `./data`.
+To use a different location, pass `cachedir=...` to a data loader or benchmark
+constructor, or prefetch manually with `hobj-download-data --cachedir /path/to/data`.
+
 For more details, check out `examples/`.
 
 ### Installation

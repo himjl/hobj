@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Dict, List
 
 import numpy as np
@@ -17,14 +18,17 @@ from hobj.data_loaders.images import load_imageset_meta_highvar
 
 # %%
 class MutatorHighVarBenchmark(LearningCurveBenchmark):
-    def __init__(self):
+    def __init__(self, cachedir: Path | None = None):
         # Load data into format expected by benchmark
 
         # Load image manifest:
-        images_df = load_imageset_meta_highvar()
+        images_df = load_imageset_meta_highvar(cachedir=cachedir)
 
         # Load raw human session data for benchmark:
-        sessions = load_highvar_behavior(remove_probe_trials=True)
+        sessions = load_highvar_behavior(
+            remove_probe_trials=True,
+            cachedir=cachedir,
+        )
 
         # Normalize data for benchmark:
         image_id_to_category = dict(

@@ -3,6 +3,7 @@ This module provides an alternative interface for instantiating a linear learnin
 """
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 import numpy as np
@@ -13,15 +14,19 @@ from hobj.types import ImageId
 
 
 # %%
-@lru_cache(maxsize=1)
-def _get_calibration_image_ids() -> list[ImageId]:
-    """
-    Returns the ImageIds of the warmup images that are used for calibrating the features of the linear learner.
-    Caches the result to avoid redundant computation.
+@lru_cache(maxsize=None)
+def _get_calibration_image_ids(cachedir: Path | None = None) -> list[ImageId]:
+    """Return the warmup image IDs used for feature calibration.
+
+    Args:
+        cachedir: Optional directory containing the packaged ``data`` tree.
+
+    Returns:
+        Sorted image IDs used for calibration.
     """
     from hobj.data_loaders.images import load_imageset_meta_warmup
 
-    images_df = load_imageset_meta_warmup()
+    images_df = load_imageset_meta_warmup(cachedir=cachedir)
     return sorted(images_df["image_id"].tolist())
 
 
@@ -39,17 +44,22 @@ def make_linear_learner_from_features(
         "REINFORCE",
     ] = "Square",
     alpha: float = 1,
+    cachedir: Path | None = None,
 ) -> LinearLearner:
-    """
-    Instantiates a linear learning model from precomputed features.
-    :param ref_to_features: Dict[mref.ImageRef, np.ndarray], the features to use.
-    :param update_rule_name: str, the name of the update rule to use.
-    :param alpha: float, the learning rate.
-    :return: LinearLearner
+    """Instantiate a linear learner from precomputed features.
+
+    Args:
+        ref_to_features: Precomputed features keyed by image ID.
+        update_rule_name: Name of the update rule to use.
+        alpha: Learning-rate parameter for the update rule.
+        cachedir: Optional directory containing the packaged ``data`` tree.
+
+    Returns:
+        A calibrated linear learner.
     """
 
     f_calibration = np.array(
-        [ref_to_features[ref] for ref in _get_calibration_image_ids()]
+        [ref_to_features[ref] for ref in _get_calibration_image_ids(cachedir=cachedir)]
     )
     mu_calibration = np.mean(f_calibration, axis=0)
     norms_calibration = np.linalg.norm(f_calibration - mu_calibration, axis=1)

@@ -1,4 +1,5 @@
 import collections
+from pathlib import Path
 from typing import Dict, List
 
 from hobj.benchmarks.generalization.benchmark import (
@@ -91,12 +92,12 @@ class MutatorOneshotBenchmark(GeneralizationBenchmark):
         "scale | 1.5",
     ]
 
-    def __init__(self):
+    def __init__(self, cachedir: Path | None = None):
         support_trials = {0, 1, 2, 3, 4, 5, 6, 7, 8}
         catch_trials = {9, 14, 19}
 
         # Load image manifest
-        images_df = load_imageset_meta_oneshot()
+        images_df = load_imageset_meta_oneshot(cachedir=cachedir)
         image_id_to_row = images_df.set_index("image_id")
 
         # Map image refs to transformation ids
@@ -145,7 +146,7 @@ class MutatorOneshotBenchmark(GeneralizationBenchmark):
             subtasks.append(subtask)
 
         # Package human data into format expected by benchmark
-        oneshot_df = load_oneshot_behavior()
+        oneshot_df = load_oneshot_behavior(cachedir=cachedir)
 
         results = []
 

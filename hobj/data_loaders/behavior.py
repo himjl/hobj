@@ -1,23 +1,33 @@
 from pathlib import Path
+from typing import Literal
 
 import pandas as pd
 
-from typing import Literal
+from hobj.data_loaders.download import resolve_data_root
 
 
 # %%
 def load_human_behavior(
     experiment: Literal["highvar", "oneshot"] = "highvar",
+    cachedir: Path | None = None,
 ) -> pd.DataFrame:
+    """Load trial-level human behavior for one of the packaged experiments.
+
+    Args:
+        experiment: Name of the experiment to load.
+        cachedir: Optional directory containing the packaged ``data`` tree.
+
+    Returns:
+        The requested behavior dataset.
+    """
     if experiment not in {"highvar", "oneshot"}:
         raise ValueError(
             f"Invalid experiment name: {experiment}. Provide either 'highvar' or 'oneshot'."
         )
 
     if experiment == "highvar":
-        return load_highvar_behavior()
-    else:
-        return load_oneshot_behavior()
+        return load_highvar_behavior(cachedir=cachedir)
+    return load_oneshot_behavior(cachedir=cachedir)
 
 
 # %% Data loaders
@@ -36,13 +46,12 @@ def load_highvar_behavior(
         A DataFrame containing the high-variance behavior dataset with
         ``stimulus_id`` normalized to ``image_id``.
     """
-    repo_root = Path(__file__).resolve().parents[2]
-    cache_root = (cachedir if cachedir is not None else repo_root / "data").resolve()
+    cache_root = resolve_data_root(cachedir=cachedir)
     dataset_path = cache_root / "behavior" / "human-behavior-highvar-subtasks.csv"
     if not dataset_path.exists():
         raise FileNotFoundError(
-            "Expected cached highvar behavior CSV to already exist at:\n"
-            f"  - {dataset_path}"
+            "Expected highvar behavior CSV to exist after resolving packaged data "
+            f"at:\n  - {dataset_path}"
         )
 
     df = pd.read_csv(dataset_path)
@@ -86,13 +95,12 @@ def load_oneshot_behavior(
         A DataFrame containing the one-shot behavior dataset with
         ``stimulus_id`` normalized to ``image_id``.
     """
-    repo_root = Path(__file__).resolve().parents[2]
-    cache_root = (cachedir if cachedir is not None else repo_root / "data").resolve()
+    cache_root = resolve_data_root(cachedir=cachedir)
     dataset_path = cache_root / "behavior" / "human-behavior-oneshot-subtasks.csv"
     if not dataset_path.exists():
         raise FileNotFoundError(
-            "Expected cached oneshot behavior CSV to already exist at:\n"
-            f"  - {dataset_path}"
+            "Expected oneshot behavior CSV to exist after resolving packaged data "
+            f"at:\n  - {dataset_path}"
         )
 
     df = pd.read_csv(dataset_path)

@@ -1,10 +1,12 @@
-"""Download packaged HOBJ datasets into the repository ``data`` directory."""
+"""Download packaged HOBJ datasets into a local ``data`` directory."""
 
 from __future__ import annotations
 
 import argparse
+import shutil
 import tarfile
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from urllib.parse import urlparse
 
 import requests
@@ -15,13 +17,13 @@ DATA_ARCHIVE_URL = (
     "https://hlbdatasets.s3.us-east-1.amazonaws.com/"
     "lee-dicarlo-2023-learning-data.tar.gz"
 )
-EXPECTED_DATA_PATHS = (
-    Path("data/meta-MutatorHighVarImageset.csv"),
-    Path("data/meta-MutatorOneShotImageset.csv"),
-    Path("data/meta-MutatorWarmupImageset.csv"),
-    Path("data/meta-CatchImageset.csv"),
-    Path("data/behavior/human-behavior-highvar-subtasks.csv"),
-    Path("data/behavior/human-behavior-oneshot-subtasks.csv"),
+EXPECTED_DATA_RELATIVE_PATHS = (
+    Path("meta-MutatorHighVarImageset.csv"),
+    Path("meta-MutatorOneShotImageset.csv"),
+    Path("meta-MutatorWarmupImageset.csv"),
+    Path("meta-CatchImageset.csv"),
+    Path("behavior/human-behavior-highvar-subtasks.csv"),
+    Path("behavior/human-behavior-oneshot-subtasks.csv"),
 )
 _DOWNLOAD_CHUNK_SIZE_BYTES = 1024 * 1024
 
@@ -31,10 +33,20 @@ def _get_repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
-def _get_missing_expected_paths(repo_root: Path) -> list[Path]:
+def _get_default_data_root(repo_root: Path | None = None) -> Path:
+    """Return the default packaged data directory."""
+    resolved_repo_root = (
+        repo_root if repo_root is not None else _get_repo_root()
+    ).resolve()
+    return resolved_repo_root / "data"
+
+
+def _get_missing_expected_paths(data_root: Path) -> list[Path]:
     """Return expected packaged data paths that are currently missing."""
     return [
-        relpath for relpath in EXPECTED_DATA_PATHS if not (repo_root / relpath).exists()
+        relpath
+        for relpath in EXPECTED_DATA_RELATIVE_PATHS
+        if not (data_root / relpath).exists()
     ]
 
 
@@ -80,26 +92,77 @@ def _safe_extract_tarball(archive_path: Path, destination: Path) -> None:
         for member in tar.getmembers():
             member_path = (destination / member.name).resolve()
             member_path.relative_to(destination)
-        tar.extractall(destination)
+        tar.extractall(destination, filter="data")
+
+
+def _find_extracted_data_root(extraction_root: Path) -> Path:
+    """Return the packaged data directory from an extracted archive tree.
+
+    Args:
+        extraction_root: Temporary directory containing the extracted archive.
+
+    Returns:
+        The directory that contains the packaged data files.
+
+    Raises:
+        FileNotFoundError: If the extracted archive does not contain the
+            expected packaged dataset layout.
+    """
+    nested_data_root = extraction_root / "data"
+    if not _get_missing_expected_paths(nested_data_root):
+        return nested_data_root
+
+    if not _get_missing_expected_paths(extraction_root):
+        return extraction_root
+
+    raise FileNotFoundError(
+        "Packaged dataset archive did not contain the expected data directory."
+    )
+
+
+def resolve_data_root(
+    *,
+    cachedir: Path | None = None,
+    repo_root: Path | None = None,
+) -> Path:
+    """Return a populated packaged data directory, downloading it on demand.
+
+    Args:
+        cachedir: Optional directory to use instead of the repository
+            ``data`` directory.
+        repo_root: Optional repository root used only when ``cachedir`` is not
+            provided.
+
+    Returns:
+        The absolute path to the packaged data directory.
+    """
+    data_root = (
+        cachedir if cachedir is not None else _get_default_data_root(repo_root)
+    ).resolve()
+    if _get_missing_expected_paths(data_root):
+        return download_data(cachedir=data_root, url=DATA_ARCHIVE_URL)
+    return data_root
 
 
 def download_data(
     *,
     url: str = DATA_ARCHIVE_URL,
     repo_root: Path | None = None,
+    cachedir: Path | None = None,
     force_download: bool = False,
 ) -> Path:
-    """Download and extract the packaged learning dataset into the repo root.
+    """Download and extract the packaged learning dataset into a cache root.
 
     The function is idempotent: if the expected packaged files already exist
-    under ``data/``, it returns immediately without downloading or extracting.
-    Otherwise it downloads the archive if needed and extracts it into the
-    repository root.
+    under the resolved data directory, it returns immediately without
+    downloading or extracting. Otherwise it downloads the archive if needed and
+    extracts it into the target cache.
 
     Args:
         url: Archive URL containing the packaged ``data`` tree.
-        repo_root: Repository root where the archive should be stored and
-            extracted.
+        repo_root: Repository root used when ``cachedir`` is not provided.
+        cachedir: Optional directory to use instead of the repository
+            ``data`` directory.
         force_download: Whether to redownload the archive even if it is already
             present on disk.
 
@@ -110,25 +173,30 @@ def download_data(
         requests.HTTPError: If the archive download fails.
         tarfile.TarError: If the archive cannot be unpacked.
         ValueError: If the archive path is invalid or extraction would escape
-            the repository root.
+            the extraction directory.
         FileNotFoundError: If extraction completes but the expected dataset
             files are still missing.
     """
-    resolved_repo_root = (
-        repo_root if repo_root is not None else _get_repo_root()
+    data_root = (
+        cachedir if cachedir is not None else _get_default_data_root(repo_root)
     ).resolve()
-    data_root = resolved_repo_root / "data"
-    missing_paths = _get_missing_expected_paths(resolved_repo_root)
+    missing_paths = _get_missing_expected_paths(data_root)
     if not missing_paths:
         return data_root
 
-    archive_path = _derive_archive_path(resolved_repo_root, url)
+    archive_root = data_root.parent
+    archive_root.mkdir(parents=True, exist_ok=True)
+    archive_path = _derive_archive_path(archive_root, url)
     if force_download or not archive_path.exists():
         _download_archive(url=url, archive_path=archive_path)
 
-    _safe_extract_tarball(archive_path=archive_path, destination=resolved_repo_root)
+    with TemporaryDirectory(dir=archive_root) as extraction_root_str:
+        extraction_root = Path(extraction_root_str)
+        _safe_extract_tarball(archive_path=archive_path, destination=extraction_root)
+        extracted_data_root = _find_extracted_data_root(extraction_root)
+        shutil.copytree(extracted_data_root, data_root, dirs_exist_ok=True)
 
-    missing_paths = _get_missing_expected_paths(resolved_repo_root)
+    missing_paths = _get_missing_expected_paths(data_root)
     if missing_paths:
         missing_str = "\n".join(f"  - {path}" for path in missing_paths)
         raise FileNotFoundError(
@@ -140,9 +208,15 @@ def download_data(
 
 
 def main() -> None:
-    """Download packaged dataset files into the repository data directory."""
+    """Download packaged dataset files into a local data directory."""
     parser = argparse.ArgumentParser(
         description="Download and extract the packaged HOBJ dataset archive."
+    )
+    parser.add_argument(
+        "--cachedir",
+        type=Path,
+        default=None,
+        help="Optional directory to use instead of the repository data directory.",
     )
     parser.add_argument(
         "--force-download",
@@ -151,7 +225,10 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    data_root = download_data(force_download=args.force_download)
+    data_root = download_data(
+        cachedir=args.cachedir,
+        force_download=args.force_download,
+    )
     print(data_root)
 
 
