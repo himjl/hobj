@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from hobj.learning_models.representation import RepresentationalModel
-from hobj.learning_models.update_rules import UpdateRule
+from hobj.learning_models.linear_learning_model.representation import RepresentationalModel
+from hobj.learning_models.linear_learning_model.update_rules import UpdateRule
 from hobj.types import ImageId
 
 

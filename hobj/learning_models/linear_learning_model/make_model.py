@@ -8,7 +8,7 @@ from typing import Literal
 
 import numpy as np
 
-import hobj.learning_models.update_rules as update_rules
+import hobj.learning_models.linear_learning_model.update_rules as update_rules
 from hobj.learning_models import LinearLearner, RepresentationalModel
 from hobj.types import ImageId
 

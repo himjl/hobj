@@ -13,7 +13,7 @@ from hobj.data.images import (
     load_imageset_meta_catch,
 )
 
-from hobj.learning_models.make_model import (
+from hobj.learning_models.linear_learning_model.make_model import (
     create_linear_learner,
 )
 
