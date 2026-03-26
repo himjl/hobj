@@ -5,6 +5,8 @@ from hobj.data_loaders.behavior import load_highvar_behavior, load_oneshot_behav
 
 from hobj.data_loaders.images import (
     load_image,
+    list_image_ids,
+    get_image_path,
     load_imageset_meta_highvar,
     load_imageset_meta_oneshot,
     load_imageset_meta_warmup,
@@ -21,10 +23,10 @@ __all__ = [
     "load_imageset_meta_warmup",
     "load_imageset_meta_catch",
     # Image loader:
+    "list_image_ids",
     "load_image",
+    "get_image_path",
     # Benchmarks:
     "MutatorHighVarBenchmark",
     "MutatorOneshotBenchmark",
-    # Learning model loader:
-    ...,
 ]

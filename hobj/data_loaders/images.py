@@ -10,52 +10,6 @@ from hobj.data_loaders.download import resolve_data_root
 from hobj.types import ImageId
 
 
-@lru_cache(maxsize=None)
-def _image_id_to_local_path_table(cache_root: Path) -> dict[ImageId, Path]:
-    """Build a mapping from image ID to absolute local path.
-
-    Args:
-        cache_root: Directory containing the packaged image manifests.
-
-    Returns:
-        A mapping from image ID to absolute image path.
-    """
-    manifest_paths = sorted(cache_root.glob("meta-*.csv"))
-    table = {}
-    for manifest_path in manifest_paths:
-        manifest_df = pd.read_csv(manifest_path)
-        for _, row in manifest_df.iterrows():
-            image_id = row["image_id"]
-            relpath = row["relpath"]
-            abs_path = cache_root / relpath
-            table[image_id] = abs_path
-    return table
-
-
-def load_image(
-    image_id: ImageId,
-    cachedir: Path | None = None,
-) -> Image.Image:
-    """Load an image by ``image_id`` from the packaged dataset.
-
-    Args:
-        image_id: ID of the image to load.
-        cachedir: Optional directory containing the packaged ``data`` tree.
-
-    Returns:
-        The requested image.
-    """
-    cache_root = resolve_data_root(cachedir=cachedir)
-    path = _image_id_to_local_path_table(cache_root).get(image_id)
-    if path is None:
-        raise ValueError(f"Image ID not found in any manifest: {image_id}")
-    if not path.exists():
-        raise FileNotFoundError(
-            f"Expected image file to exist after resolving packaged data at: {path}"
-        )
-    return Image.open(path)
-
-
 def _load_image_manifest(
     *,
     dataset_name: str,
@@ -162,6 +116,90 @@ def load_imageset_meta_catch(
     )
     return manifest_df.sort_values("image_id").reset_index(drop=True)
 
+# %% Image loaders:
 
+@lru_cache(maxsize=None)
+def _image_id_to_local_path_table(cache_root: Path) -> dict[ImageId, Path]:
+    """Build a mapping from image ID to absolute local path.
+
+    Args:
+        cache_root: Directory containing the packaged image manifests.
+
+    Returns:
+        A mapping from image ID to absolute image path.
+    """
+    manifest_paths = sorted(cache_root.glob("meta-*.csv"))
+    table = {}
+    for manifest_path in manifest_paths:
+        manifest_df = pd.read_csv(manifest_path)
+        for _, row in manifest_df.iterrows():
+            image_id = row["image_id"]
+            relpath = row["relpath"]
+            abs_path = cache_root / relpath
+            table[image_id] = abs_path
+    return table
+
+
+def list_image_ids(cachedir: Path | None = None) -> list[ImageId]:
+    """Iterate over all packaged image IDs.
+
+    Args:
+        cachedir: Optional directory containing the packaged ``data`` tree.
+
+    Yields:
+        Image IDs from the packaged dataset.
+    """
+    cache_root = resolve_data_root(cachedir=cachedir)
+    table = _image_id_to_local_path_table(cache_root)
+    return sorted(table.keys())
+
+def load_image(
+        image_id: ImageId,
+        cachedir: Path | None = None,
+) -> Image.Image:
+    """Load an image by ``image_id`` from the packaged dataset.
+
+    Args:
+        image_id: ID of the image to load.
+        cachedir: Optional directory containing the packaged ``data`` tree.
+
+    Returns:
+        The requested image.
+    """
+    path = get_image_path(image_id=image_id, cachedir=cachedir)
+    return Image.open(path)
+
+
+
+def get_image_path(
+        image_id: ImageId,
+        cachedir: Path | None = None,
+) -> Path:
+    """Return the local path for an image in the packaged dataset.
+
+    Args:
+        image_id: ID of the image to resolve.
+        cachedir: Optional directory containing the packaged ``data`` tree.
+
+    Returns:
+        The absolute path to the requested image.
+
+    Raises:
+        ValueError: If the image ID is not present in any packaged manifest.
+        FileNotFoundError: If the resolved image file is missing on disk.
+    """
+    cache_root = resolve_data_root(cachedir=cachedir)
+    path = _image_id_to_local_path_table(cache_root).get(image_id)
+    if path is None:
+        raise ValueError(f"Image ID not found in any manifest: {image_id}")
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Expected image file to exist after resolving packaged data at: {path}"
+        )
+    return path
+
+
+
+# %%
 if __name__ == "__main__":
-    df = load_imageset_meta_oneshot()
+    df = list_image_ids()
