@@ -5,7 +5,7 @@ import numpy as np
 from hobj.benchmarks.binary_classification.benchmark import LearningCurveBenchmark, LearningCurveBenchmarkConfig, TargetSubtaskData
 from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask, BinaryClassificationSubtaskResult
 from hobj.data_loaders.behavior import load_highvar_behavior
-from hobj.data_loaders.images import MutatorHighVarImageset
+from hobj.data_loaders.images import load_mutator_highvar_images
 
 
 # %%
@@ -14,16 +14,21 @@ class MutatorHighVarBenchmark(LearningCurveBenchmark):
     def __init__(self):
         # Load data into format expected by benchmark
 
-        # Load imageset:
-        imageset = MutatorHighVarImageset()
+        # Load image manifest:
+        images_df = load_mutator_highvar_images()
 
         # Load raw human session data for benchmark:
         sessions = load_highvar_behavior(remove_probe_trials=True)
 
         # Normalize data for benchmark:
-        stimulus_id_to_category = {
-            image_id: imageset.get_annotation(image_id=image_id).category for image_id in imageset.image_ids
-        }
+        image_id_to_category = dict(
+            zip(images_df['image_id'], images_df['category'], strict=True)
+        )
+        category_to_image_ids = (
+            images_df.groupby('category', sort=False)['image_id']
+            .apply(lambda image_ids: sorted(image_ids.tolist()))
+            .to_dict()
+        )
 
         subtask_name_to_results = {}
         subtask_name_to_subtask = {}
@@ -36,8 +41,8 @@ class MutatorHighVarBenchmark(LearningCurveBenchmark):
 
             # Iterate over trials:
             session = session.sort_values('trial')
-            for reward, stimulus_id in zip(session.perf, session.stimulus_id):
-                categories.add(stimulus_id_to_category[stimulus_id])
+            for reward, image_id in zip(session.perf, session.image_id):
+                categories.add(image_id_to_category[image_id])
                 perf_seq.append(bool(reward))
 
             # Infer subtask from the categories observed in the session:
@@ -48,8 +53,8 @@ class MutatorHighVarBenchmark(LearningCurveBenchmark):
             # Instantiate the subtask if it does not exist:
             if subtask_name not in subtask_name_to_subtask:
                 subtask = BinaryClassificationSubtask(
-                    classA=imageset.category_to_image_ids[cat0],
-                    classB=imageset.category_to_image_ids[cat1],
+                    classA=category_to_image_ids[cat0],
+                    classB=category_to_image_ids[cat1],
                     ntrials=100,
                     replace=False,
                 )

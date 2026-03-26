@@ -2,25 +2,26 @@ from pathlib import Path
 
 import pandas as pd
 
-__all__ = ['load_highvar_behavior', 'load_oneshot_behavior']
-
 
 # %% Data loaders
 def load_highvar_behavior(
         remove_probe_trials: bool = True,
         cachedir: Path | None = None,
-        redownload: bool = False,
 ) -> pd.DataFrame:
-    """
-    Load the trial-level human learning data from Experiment 1 of Lee and DiCarlo 2023.
-    :return:
-    """
-    if redownload:
-        raise ValueError("load_highvar_behavior no longer supports redownload; expected cached CSV artifact instead.")
+    """Load trial-level human learning data from Experiment 1.
 
+    Args:
+        remove_probe_trials: Whether to exclude probe trials and renumber the
+            remaining trial index within each assignment.
+        cachedir: Optional root directory containing the packaged ``data`` tree.
+
+    Returns:
+        A DataFrame containing the high-variance behavior dataset with
+        ``stimulus_id`` normalized to ``image_id``.
+    """
     repo_root = Path(__file__).resolve().parents[2]
     cache_root = (cachedir if cachedir is not None else repo_root / 'data').resolve()
-    dataset_path = cache_root / 'behavior' / 'human-behavior-highvar-tasks.csv'
+    dataset_path = cache_root / 'behavior' / 'human-behavior-highvar-subtasks.csv'
     if not dataset_path.exists():
         raise FileNotFoundError(
             "Expected cached highvar behavior CSV to already exist at:\n"
@@ -34,7 +35,7 @@ def load_highvar_behavior(
         'assignment_id',
         'worker_id',
         'subtask',
-        'stimulus_id',
+        'image_id',
         'trial_type',
         'stimulus_duration_msec',
         'reaction_time_msec',
@@ -46,6 +47,7 @@ def load_highvar_behavior(
     if missing_columns:
         raise ValueError(f"Highvar behavior CSV missing required columns: {sorted(missing_columns)}")
 
+
     if remove_probe_trials:
         df = df.loc[df['trial_type'] != 'probe'].copy()
         df = df.sort_values(['assignment_id', 'trial']).copy()
@@ -56,18 +58,19 @@ def load_highvar_behavior(
 
 def load_oneshot_behavior(
         cachedir: Path | None = None,
-        redownload: bool = False,
 ) -> pd.DataFrame:
-    """
-    Load the trial-level human learning data from Experiment 2 of Lee and DiCarlo 2023.
-    :return:
-    """
-    if redownload:
-        raise ValueError("load_oneshot_behavior no longer supports redownload; expected cached CSV artifact instead.")
+    """Load trial-level human learning data from Experiment 2.
 
+    Args:
+        cachedir: Optional root directory containing the packaged ``data`` tree.
+
+    Returns:
+        A DataFrame containing the one-shot behavior dataset with
+        ``stimulus_id`` normalized to ``image_id``.
+    """
     repo_root = Path(__file__).resolve().parents[2]
     cache_root = (cachedir if cachedir is not None else repo_root / 'data').resolve()
-    dataset_path = cache_root / 'behavior' / 'human-behavior-oneshot-tasks.csv'
+    dataset_path = cache_root / 'behavior' / 'human-behavior-oneshot-subtasks.csv'
     if not dataset_path.exists():
         raise FileNotFoundError(
             "Expected cached oneshot behavior CSV to already exist at:\n"
@@ -78,12 +81,11 @@ def load_oneshot_behavior(
 
     required_columns = {
         'trial',
-        'session_id',
         'assignment_id',
         'slot',
         'worker_id',
         'subtask',
-        'stimulus_id',
+        'image_id',
         'trial_type',
         'stimulus_duration_msec',
         'reaction_time_msec',
@@ -99,7 +101,7 @@ def load_oneshot_behavior(
 
 
 if __name__ == '__main__':
-    df = load_highvar_behavior()
+    df = load_oneshot_behavior()
     import matplotlib.pyplot as plt
     lc = df.groupby('trial')['perf'].mean()
     plt.plot(lc.index.values, lc)
