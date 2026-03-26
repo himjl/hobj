@@ -6,6 +6,7 @@ from hobj.learning_models import BinaryLearningModel
 from hobj.types import ImageId
 from typing import cast
 
+
 class RandomGuesser(BinaryLearningModel):
     """
     A dummy model which simply returns random outputs, independent of the given image.

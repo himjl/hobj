@@ -30,7 +30,7 @@ class UpdateRule(ABC):
         self,
         x: np.ndarray,
         w: np.ndarray,
-        b: Union[np.ndarray, np.generic, float],
+        b: np.ndarray,
         logits: np.ndarray,
         action: int,
         reward: float,
@@ -66,7 +66,7 @@ class Prototype(UpdateRule):
         self,
         x: np.ndarray,
         w: np.ndarray,
-        b: Union[np.ndarray, np.generic, float],
+        b: np.ndarray,
         logits: np.ndarray,
         action: int,
         reward: float,
@@ -103,7 +103,7 @@ class Square(UpdateRule):
         self,
         x: np.ndarray,
         w: np.ndarray,
-        b: Union[np.ndarray, np.generic, float],
+        b: np.ndarray,
         logits: np.ndarray,
         action: int,
         reward: float,
@@ -113,7 +113,7 @@ class Square(UpdateRule):
         reward_prediction = logits[action]
         rpe = float(reward) - reward_prediction
 
-        delta[:, action] = (self.alpha) * rpe * x
+        delta[:, action] = self.alpha * rpe * x
         return delta, 0
 
 
@@ -122,7 +122,7 @@ class Perceptron(UpdateRule):
         self,
         x: np.ndarray,
         w: np.ndarray,
-        b: Union[np.ndarray, np.generic, float],
+        b: np.ndarray,
         logits: np.ndarray,
         action: int,
         reward: float,
@@ -143,7 +143,7 @@ class Hinge(UpdateRule):
         self,
         x: np.ndarray,
         w: np.ndarray,
-        b: Union[np.ndarray, np.generic, float],
+        b: np.ndarray,
         logits: np.ndarray,
         action: int,
         reward: float,
@@ -164,7 +164,7 @@ class MAE(UpdateRule):
         self,
         x: np.ndarray,
         w: np.ndarray,
-        b: Union[np.ndarray, np.generic, float],
+        b: np.ndarray,
         logits: np.ndarray,
         action: int,
         reward: float,
@@ -189,7 +189,7 @@ class Exponential(UpdateRule):
         self,
         x: np.ndarray,
         w: np.ndarray,
-        b: Union[np.ndarray, np.generic, float],
+        b: np.ndarray,
         logits: np.ndarray,
         action: int,
         reward: float,
@@ -213,7 +213,7 @@ class CE(UpdateRule):
         self,
         x: np.ndarray,
         w: np.ndarray,
-        b: Union[np.ndarray, np.generic, float],
+        b: np.ndarray,
         logits: np.ndarray,
         action: int,
         reward: float,
@@ -231,8 +231,8 @@ class CE(UpdateRule):
 
 
 class REINFORCE(UpdateRule):
+    @staticmethod
     def _compute_trace(
-        self,
         action_taken: int,
         logits: np.ndarray,
     ):
