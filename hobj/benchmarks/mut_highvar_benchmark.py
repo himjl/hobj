@@ -5,7 +5,7 @@ import numpy as np
 from hobj.benchmarks.binary_classification.benchmark import LearningCurveBenchmark, LearningCurveBenchmarkConfig, TargetSubtaskData
 from hobj.benchmarks.binary_classification.simulation import BinaryClassificationSubtask, BinaryClassificationSubtaskResult
 from hobj.data_loaders.behavior import load_highvar_behavior
-from hobj.data_loaders.images import load_mutator_highvar_images
+from hobj.data_loaders.images import load_imageset_meta_highvar
 
 
 # %%
@@ -15,7 +15,7 @@ class MutatorHighVarBenchmark(LearningCurveBenchmark):
         # Load data into format expected by benchmark
 
         # Load image manifest:
-        images_df = load_mutator_highvar_images()
+        images_df = load_imageset_meta_highvar()
 
         # Load raw human session data for benchmark:
         sessions = load_highvar_behavior(remove_probe_trials=True)

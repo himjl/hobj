@@ -3,7 +3,37 @@
 from pathlib import Path
 
 import pandas as pd
+from hobj.types import ImageId
+from PIL import Image
+from functools import lru_cache
 
+
+@lru_cache(maxsize=1)
+def _image_id_to_local_path_table() -> dict[ImageId, Path]:
+    """Build a mapping from image_id to absolute local path for all packaged images."""
+    repo_root = Path(__file__).resolve().parents[2]
+    cache_root = repo_root / 'data'
+    manifest_paths = list(cache_root.glob('meta-*.csv'))
+    table = {}
+    for manifest_path in manifest_paths:
+        manifest_df = pd.read_csv(manifest_path)
+        for _, row in manifest_df.iterrows():
+            image_id = row['image_id']
+            relpath = row['relpath']
+            abs_path = cache_root / relpath
+            table[image_id] = abs_path
+    return table
+
+
+def load_image(
+        image_id: ImageId
+) -> Image:
+    path = _image_id_to_local_path_table().get(image_id)
+    if path is None:
+        raise ValueError(f"Image ID not found in any manifest: {image_id}")
+    if not path.exists():
+        raise FileNotFoundError(f"Expected image file to already exist at: {path}")
+    return Image.open(path)
 
 def _load_image_manifest(
         *,
@@ -52,7 +82,7 @@ def _load_image_manifest(
     return manifest_df
 
 
-def load_mutator_highvar_images(
+def load_imageset_meta_highvar(
         cachedir: Path | None = None,
 ) -> pd.DataFrame:
     """Load the high-variance image manifest."""
@@ -64,7 +94,7 @@ def load_mutator_highvar_images(
     return manifest_df.sort_values('image_id').reset_index(drop=True)
 
 
-def load_mutator_oneshot_images(
+def load_imageset_meta_oneshot(
         cachedir: Path | None = None,
 ) -> pd.DataFrame:
     """Load the one-shot image manifest."""
@@ -84,7 +114,7 @@ def load_mutator_oneshot_images(
     return manifest_df.sort_values('image_id').reset_index(drop=True)
 
 
-def load_mutator_warmup_images(
+def load_imageset_meta_warmup(
         cachedir: Path | None = None,
 ) -> pd.DataFrame:
     """Load the warmup image manifest."""
@@ -96,7 +126,7 @@ def load_mutator_warmup_images(
     return manifest_df.sort_values('image_id').reset_index(drop=True)
 
 
-def load_probe_images(
+def load_imageset_meta_catch(
         cachedir: Path | None = None,
 ) -> pd.DataFrame:
     """Load the probe image manifest."""
@@ -108,4 +138,4 @@ def load_probe_images(
     return manifest_df.sort_values('image_id').reset_index(drop=True)
 
 if __name__ == '__main__':
-    df = load_mutator_oneshot_images()
+    df = load_imageset_meta_oneshot()

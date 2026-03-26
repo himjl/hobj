@@ -2,6 +2,19 @@ from pathlib import Path
 
 import pandas as pd
 
+from typing import Literal
+
+# %%
+def load_human_behavior(
+        experiment: Literal['highvar', 'oneshot'] = 'highvar',
+) -> pd.DataFrame:
+    if experiment not in {'highvar', 'oneshot'}:
+        raise ValueError(f"Invalid experiment name: {experiment}. Provide either 'highvar' or 'oneshot'.")
+
+    if experiment == 'highvar':
+        return load_highvar_behavior()
+    else:
+        return load_oneshot_behavior()
 
 # %% Data loaders
 def load_highvar_behavior(
@@ -99,10 +112,3 @@ def load_oneshot_behavior(
 
     return df
 
-
-if __name__ == '__main__':
-    df = load_oneshot_behavior()
-    import matplotlib.pyplot as plt
-    lc = df.groupby('trial')['perf'].mean()
-    plt.plot(lc.index.values, lc)
-    plt.show()

@@ -5,7 +5,7 @@ from hobj.benchmarks.generalization.benchmark import GeneralizationBenchmark, Ge
 from hobj.benchmarks.generalization.estimator import GeneralizationStatistics
 from hobj.benchmarks.generalization.simulator import GeneralizationSubtask
 from hobj.data_loaders.behavior import load_oneshot_behavior
-from hobj.data_loaders.images import load_mutator_oneshot_images
+from hobj.data_loaders.images import load_imageset_meta_oneshot
 
 from hobj.types import ImageId
 
@@ -91,7 +91,7 @@ class MutatorOneshotBenchmark(GeneralizationBenchmark):
         catch_trials = {9, 14, 19}
 
         # Load image manifest
-        images_df = load_mutator_oneshot_images()
+        images_df = load_imageset_meta_oneshot()
         image_id_to_row = images_df.set_index('image_id')
 
         # Map image refs to transformation ids
