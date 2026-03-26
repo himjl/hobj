@@ -250,4 +250,4 @@ I renamed the objects to follow a cleaner naming scheme. See below for the map f
 
 ### Image renaming
 
-Following
+Following the renames of the object categories, the images were renamed as well. The old image names are available in the `original_filename` columns of each `meta-*.csv` file for each imageset.
