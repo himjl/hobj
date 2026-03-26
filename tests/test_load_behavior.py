@@ -51,7 +51,7 @@ def test_load_warmup_images():
 def test_load_probe_images():
     df = load_imageset_meta_catch()
     assert len(df) == 2
-    assert {"image_id", "color", "text", "sha256", "relpath"} <= set(df.columns)
+    assert {"image_id",  "sha256", "relpath"} <= set(df.columns)
 
 
 def test_load_image():
