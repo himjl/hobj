@@ -12,8 +12,8 @@ from hobj.benchmarks.binary_classification.simulation import (
     BinaryClassificationSubtask,
     BinaryClassificationSubtaskResult,
 )
-from hobj.data_loaders.behavior import load_highvar_behavior
-from hobj.data_loaders.images import load_imageset_meta_highvar
+from hobj.data.behavior import load_highvar_behavior
+from hobj.data.images import load_imageset_meta_highvar
 
 
 # %%

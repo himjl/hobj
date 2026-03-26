@@ -9,8 +9,8 @@ from hobj.benchmarks.generalization.benchmark import (
 )
 from hobj.benchmarks.generalization.estimator import GeneralizationStatistics
 from hobj.benchmarks.generalization.simulator import GeneralizationSubtask
-from hobj.data_loaders.behavior import load_oneshot_behavior
-from hobj.data_loaders.images import load_imageset_meta_oneshot
+from hobj.data.behavior import load_oneshot_behavior
+from hobj.data.images import load_imageset_meta_oneshot
 
 from hobj.types import ImageId
 

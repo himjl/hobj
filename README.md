@@ -1,3 +1,5 @@
+from hobj.learning_models import random_guesser
+
 # `hobj`: human object learning benchmarks
 
 [![CI](https://github.com/himjl/hobj/actions/workflows/ci.yml/badge.svg)](https://github.com/himjl/hobj/actions/workflows/ci.yml)
@@ -18,10 +20,10 @@ Then, an instance of that subclass may be passed in as an argument to a benchmar
 import hobj
 
 # Load model: 
-model = hobj.learning_models.RandomGuesser() # A subclass of BinaryLearningModel
+model = random_guesser.RandomGuesser()  # A subclass of BinaryLearningModel
 
 # Load benchmark:
-benchmark = hobj.MutatorHighVarBenchmark() # Try benchmark 2: hobj.MutatorOneshotBenchmark()
+benchmark = hobj.MutatorHighVarBenchmark()  # Try benchmark 2: hobj.MutatorOneshotBenchmark()
 result = benchmark(model)
 
 # Print the score and its CI:

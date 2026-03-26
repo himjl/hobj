@@ -3,7 +3,7 @@ from typing import Literal
 
 import pandas as pd
 
-from hobj.data_loaders.download import resolve_data_root
+from hobj.data.download import resolve_data_root
 
 
 # %%

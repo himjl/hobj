@@ -2,8 +2,8 @@ import os
 
 import pytest
 
-from hobj.data_loaders.behavior import load_highvar_behavior, load_oneshot_behavior
-from hobj.data_loaders.images import (
+from hobj.data.behavior import load_highvar_behavior, load_oneshot_behavior
+from hobj.data.images import (
     load_image,
     load_imageset_meta_catch,
     load_imageset_meta_highvar,

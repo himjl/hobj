@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 from PIL import Image
 
-from hobj.data_loaders.download import resolve_data_root
+from hobj.data.download import resolve_data_root
 from hobj.types import ImageId
 
 

@@ -24,15 +24,15 @@ def _get_calibration_image_ids(cachedir: Path | None = None) -> list[ImageId]:
     Returns:
         Sorted image IDs used for calibration.
     """
-    from hobj.data_loaders.images import load_imageset_meta_warmup
+    from hobj.data.images import load_imageset_meta_warmup
 
     images_df = load_imageset_meta_warmup(cachedir=cachedir)
     return sorted(images_df["image_id"].tolist())
 
 
 # %%
-def make_linear_learner_from_features(
-    ref_to_features: dict[ImageId, np.ndarray],
+def create_linear_learner(
+    image_id_to_features: dict[ImageId, np.ndarray],
     update_rule_name: Literal[
         "Prototype",
         "Square",
@@ -49,7 +49,7 @@ def make_linear_learner_from_features(
     """Instantiate a linear learner from precomputed features.
 
     Args:
-        ref_to_features: Precomputed features keyed by image ID.
+        image_id_to_features: Precomputed features keyed by image ID.
         update_rule_name: Name of the update rule to use.
         alpha: Learning-rate parameter for the update rule.
         cachedir: Optional directory containing the packaged ``data`` tree.
@@ -58,16 +58,19 @@ def make_linear_learner_from_features(
         A calibrated linear learner.
     """
 
+    if alpha < 0 or alpha > 1:
+        raise ValueError("alpha must be in the interval [0, 1]")
+
     f_calibration = np.array(
-        [ref_to_features[ref] for ref in _get_calibration_image_ids(cachedir=cachedir)]
+        [image_id_to_features[ref] for ref in _get_calibration_image_ids(cachedir=cachedir)]
     )
     mu_calibration = np.mean(f_calibration, axis=0)
     norms_calibration = np.linalg.norm(f_calibration - mu_calibration, axis=1)
     norm_cutoff = np.quantile(norms_calibration, 0.999)  # Will clip the rest
 
     ref_to_calibrated_features = {}
-    for ref in ref_to_features:
-        f = ref_to_features[ref]
+    for ref in image_id_to_features:
+        f = image_id_to_features[ref]
         fc = f - mu_calibration
         fcn = fc / norm_cutoff
         norm_cur = np.linalg.norm(fcn)
