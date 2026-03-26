@@ -45,7 +45,9 @@ def create_linear_learner(
     alpha: float = 1,
     cachedir: Path | None = None,
 ) -> LinearLearner:
-    """Instantiate a linear learner from precomputed features.
+    """
+    Instantiate a linear learner from precomputed features, using the procedure
+    described in the paper to calibrate the features based on the warmup images.
 
     Args:
         image_id_to_features: Precomputed features keyed by image ID.
