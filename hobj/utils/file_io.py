@@ -53,7 +53,7 @@ def download_file(url: str, output_path: Path) -> None:
             file.flush()
 
 
-def get_bytes_size(num_bytes: int, output_units: str = None) -> (float, str):
+def get_bytes_size(num_bytes: int, output_units: str | None = None) -> tuple[float, str]:
     """
 
     :param num_bytes:

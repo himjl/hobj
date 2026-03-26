@@ -24,6 +24,7 @@ dependencies = [
     "xarray>=2025.1",
     "scipy>=1.17.1",
     "ipykernel>=7.2.0",
+    "scipy-stubs~=1.17.1",
 ]
 
 [project.scripts]
