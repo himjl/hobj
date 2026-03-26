@@ -1,6 +1,7 @@
 """
 This module provides an alternative interface for instantiating a linear learning model.
 """
+
 from functools import lru_cache
 from typing import Literal
 
@@ -21,23 +22,23 @@ def _get_calibration_image_ids() -> list[ImageId]:
     from hobj.data_loaders.images import load_imageset_meta_warmup
 
     images_df = load_imageset_meta_warmup()
-    return sorted(images_df['image_id'].tolist())
+    return sorted(images_df["image_id"].tolist())
 
 
 # %%
 def make_linear_learner_from_features(
-        ref_to_features: dict[ImageId, np.ndarray],
-        update_rule_name: Literal[
-            'Prototype',
-            'Square',
-            'Perceptron',
-            'Hinge',
-            'MAE',
-            'Exponential',
-            'CE',
-            'REINFORCE'
-        ] = 'Square',
-        alpha: float = 1,
+    ref_to_features: dict[ImageId, np.ndarray],
+    update_rule_name: Literal[
+        "Prototype",
+        "Square",
+        "Perceptron",
+        "Hinge",
+        "MAE",
+        "Exponential",
+        "CE",
+        "REINFORCE",
+    ] = "Square",
+    alpha: float = 1,
 ) -> LinearLearner:
     """
     Instantiates a linear learning model from precomputed features.
@@ -47,7 +48,9 @@ def make_linear_learner_from_features(
     :return: LinearLearner
     """
 
-    f_calibration = np.array([ref_to_features[ref] for ref in _get_calibration_image_ids()])
+    f_calibration = np.array(
+        [ref_to_features[ref] for ref in _get_calibration_image_ids()]
+    )
     mu_calibration = np.mean(f_calibration, axis=0)
     norms_calibration = np.linalg.norm(f_calibration - mu_calibration, axis=1)
     norm_cutoff = np.quantile(norms_calibration, 0.999)  # Will clip the rest
@@ -67,5 +70,5 @@ def make_linear_learner_from_features(
         representational_model=RepresentationalModel.from_precomputed_features(
             image_ref_to_features=ref_to_calibrated_features
         ),
-        update_rule=update_rule_name(alpha=alpha)
+        update_rule=update_rule_name(alpha=alpha),
     )

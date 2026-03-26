@@ -4,9 +4,9 @@ import numpy as np
 
 
 def estimate_basic_bootstrap_CI(
-        alpha: float,
-        point_estimate: Union[np.ndarray, np.generic, float, int],  # [*]
-        bootstrapped_point_estimates: np.ndarray,  # [n_bootstraps, *]
+    alpha: float,
+    point_estimate: Union[np.ndarray, np.generic, float, int],  # [*]
+    bootstrapped_point_estimates: np.ndarray,  # [n_bootstraps, *]
 ) -> Tuple[float, float]:
     """
     Estimates the basic confidence interval for a given point estimate(s) using the bootstrap method.
@@ -17,14 +17,16 @@ def estimate_basic_bootstrap_CI(
     """
 
     if not 0 < alpha < 1:
-        raise ValueError(f'alpha must be in the range (0, 1); got {alpha:.2f}')
+        raise ValueError(f"alpha must be in the range (0, 1); got {alpha:.2f}")
 
     # Coerce point_estimate to a numpy array
     point_estimate = np.array(point_estimate)  # [*]
 
     # Ensure the dimensions are as expected
     if not len(point_estimate.shape) == len(bootstrapped_point_estimates.shape) - 1:
-        raise ValueError(f'The dimensions of the point estimate and bootstrapped point estimates do not match: {point_estimate.shape} vs {bootstrapped_point_estimates.shape}')
+        raise ValueError(
+            f"The dimensions of the point estimate and bootstrapped point estimates do not match: {point_estimate.shape} vs {bootstrapped_point_estimates.shape}"
+        )
 
     # Calculate confidence interval using the basic bootstrap method
     low = np.quantile(bootstrapped_point_estimates, alpha / 2, axis=0)  # [*]

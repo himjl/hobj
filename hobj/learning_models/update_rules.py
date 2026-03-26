@@ -27,13 +27,13 @@ class UpdateRule(ABC):
 
     @abstractmethod
     def get_update(
-            self,
-            x: np.ndarray,
-            w: np.ndarray,
-            b: Union[np.ndarray, np.generic, float],
-            logits: np.ndarray,
-            action: int,
-            reward: float
+        self,
+        x: np.ndarray,
+        w: np.ndarray,
+        b: Union[np.ndarray, np.generic, float],
+        logits: np.ndarray,
+        action: int,
+        reward: float,
     ) -> Tuple[np.ndarray, Union[np.ndarray, np.generic, float]]:
         """
         Returns delta_w and delta_b, where
@@ -63,13 +63,13 @@ class Prototype(UpdateRule):
         self.ncounts = None
 
     def get_update(
-            self,
-            x: np.ndarray,
-            w: np.ndarray,
-            b: Union[np.ndarray, np.generic, float],
-            logits: np.ndarray,
-            action: int,
-            reward: float
+        self,
+        x: np.ndarray,
+        w: np.ndarray,
+        b: Union[np.ndarray, np.generic, float],
+        logits: np.ndarray,
+        action: int,
+        reward: float,
     ) -> Tuple[np.ndarray, Union[np.ndarray, np.generic, float]]:
         if self.ncounts is None:
             self.ncounts = np.zeros(w.shape[1])
@@ -99,15 +99,14 @@ class Prototype(UpdateRule):
 
 
 class Square(UpdateRule):
-
     def get_update(
-            self,
-            x: np.ndarray,
-            w: np.ndarray,
-            b: Union[np.ndarray, np.generic, float],
-            logits: np.ndarray,
-            action: int,
-            reward: float
+        self,
+        x: np.ndarray,
+        w: np.ndarray,
+        b: Union[np.ndarray, np.generic, float],
+        logits: np.ndarray,
+        action: int,
+        reward: float,
     ) -> Tuple[np.ndarray, Union[np.ndarray, np.generic, float]]:
         delta = np.zeros(w.shape)
 
@@ -119,15 +118,14 @@ class Square(UpdateRule):
 
 
 class Perceptron(UpdateRule):
-
     def get_update(
-            self,
-            x: np.ndarray,
-            w: np.ndarray,
-            b: Union[np.ndarray, np.generic, float],
-            logits: np.ndarray,
-            action: int,
-            reward: float
+        self,
+        x: np.ndarray,
+        w: np.ndarray,
+        b: Union[np.ndarray, np.generic, float],
+        logits: np.ndarray,
+        action: int,
+        reward: float,
     ) -> Tuple[np.ndarray, Union[np.ndarray, np.generic, float]]:
         nactions = len(logits)
         gts = np.zeros(nactions)
@@ -141,15 +139,14 @@ class Perceptron(UpdateRule):
 
 
 class Hinge(UpdateRule):
-
     def get_update(
-            self,
-            x: np.ndarray,
-            w: np.ndarray,
-            b: Union[np.ndarray, np.generic, float],
-            logits: np.ndarray,
-            action: int,
-            reward: float
+        self,
+        x: np.ndarray,
+        w: np.ndarray,
+        b: Union[np.ndarray, np.generic, float],
+        logits: np.ndarray,
+        action: int,
+        reward: float,
     ) -> Tuple[np.ndarray, Union[np.ndarray, np.generic, float]]:
         nactions = len(logits)
         gts = np.zeros(nactions)
@@ -163,17 +160,15 @@ class Hinge(UpdateRule):
 
 
 class MAE(UpdateRule):
-
     def get_update(
-            self,
-            x: np.ndarray,
-            w: np.ndarray,
-            b: Union[np.ndarray, np.generic, float],
-            logits: np.ndarray,
-            action: int,
-            reward: float
+        self,
+        x: np.ndarray,
+        w: np.ndarray,
+        b: Union[np.ndarray, np.generic, float],
+        logits: np.ndarray,
+        action: int,
+        reward: float,
     ) -> Tuple[np.ndarray, Union[np.ndarray, np.generic, float]]:
-
         nactions = len(logits)
         reward_prediction = logits[action]
 
@@ -191,13 +186,13 @@ class Exponential(UpdateRule):
     max_weight_norm = 10.0
 
     def get_update(
-            self,
-            x: np.ndarray,
-            w: np.ndarray,
-            b: Union[np.ndarray, np.generic, float],
-            logits: np.ndarray,
-            action: int,
-            reward: float
+        self,
+        x: np.ndarray,
+        w: np.ndarray,
+        b: Union[np.ndarray, np.generic, float],
+        logits: np.ndarray,
+        action: int,
+        reward: float,
     ) -> Tuple[np.ndarray, Union[np.ndarray, np.generic, float]]:
         nactions = len(logits)
 
@@ -214,32 +209,32 @@ class Exponential(UpdateRule):
 
 
 class CE(UpdateRule):
-
     def get_update(
-            self,
-            x: np.ndarray,
-            w: np.ndarray,
-            b: Union[np.ndarray, np.generic, float],
-            logits: np.ndarray,
-            action: int,
-            reward: float
+        self,
+        x: np.ndarray,
+        w: np.ndarray,
+        b: Union[np.ndarray, np.generic, float],
+        logits: np.ndarray,
+        action: int,
+        reward: float,
     ) -> Tuple[np.ndarray, Union[np.ndarray, np.generic, float]]:
         nactions = len(logits)
         gts = np.zeros(nactions)
         reward_prediction = logits[action]
 
-        gts[action] = 4 * self.alpha * (reward / (1 + np.exp(reward * reward_prediction)))
+        gts[action] = (
+            4 * self.alpha * (reward / (1 + np.exp(reward * reward_prediction)))
+        )
 
         delta = x[:, None] * gts[None, :]
         return delta, 0
 
 
 class REINFORCE(UpdateRule):
-
     def _compute_trace(
-            self,
-            action_taken: int,
-            logits: np.ndarray,
+        self,
+        action_taken: int,
+        logits: np.ndarray,
     ):
         """
         Computes the negative derivative of the probability of taking each action with respect to logit[i]
@@ -264,13 +259,13 @@ class REINFORCE(UpdateRule):
         return expression
 
     def get_update(
-            self,
-            x: np.ndarray,
-            w: np.ndarray,
-            b: Union[np.ndarray, np.generic, float],
-            logits: np.ndarray,
-            action: int,
-            reward: float
+        self,
+        x: np.ndarray,
+        w: np.ndarray,
+        b: Union[np.ndarray, np.generic, float],
+        logits: np.ndarray,
+        action: int,
+        reward: float,
     ) -> Tuple[np.ndarray, Union[np.ndarray, np.generic, float]]:
         gt = self.alpha * reward * self._compute_trace(action, logits)
 

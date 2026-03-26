@@ -21,8 +21,8 @@ class BinaryLearningModel(ABC):
 
     @abstractmethod
     def get_response(
-            self,
-            image: ImageId,
+        self,
+        image: ImageId,
     ) -> typing.Literal[0, 1]:
         """
         This function takes the current stimulus image (given either as a PIL.Image or a ImageRef) and returns one of two possible actions (parameterized by an integer).
@@ -53,8 +53,8 @@ class RandomGuesser(BinaryLearningModel):
         self.random_generator = np.random.default_rng(seed=seed)
 
     def get_response(
-            self,
-            image: ImageId,
+        self,
+        image: ImageId,
     ) -> typing.Literal[0, 1]:
         action = self.random_generator.integers(2)
         action = int(action)
@@ -67,11 +67,10 @@ class RandomGuesser(BinaryLearningModel):
 # %%
 class LinearLearner(BinaryLearningModel):
     def __init__(
-            self,
-            representational_model: RepresentationalModel,
-            update_rule: UpdateRule,
+        self,
+        representational_model: RepresentationalModel,
+        update_rule: UpdateRule,
     ):
-
         self.representational_model = representational_model
         self.update_rule = update_rule
 
@@ -103,10 +102,9 @@ class LinearLearner(BinaryLearningModel):
         return
 
     def get_response(
-            self,
-            image: ImageId,
+        self,
+        image: ImageId,
     ) -> typing.Literal[0, 1]:
-
         f = self.representational_model.get_features(image=image)
         logits = f @ self.w + self.b
         action = self._random_tiebreaking_argmax(logits[0], logits[1])
@@ -118,7 +116,14 @@ class LinearLearner(BinaryLearningModel):
         return action
 
     def give_feedback(self, reward: float) -> None:
-        delta_w, delta_b = self.update_rule.get_update(x=self._f_last, w=self.w, b=self.b, logits=self._logits_last, action=self._action_last, reward=reward)  # [action]
+        delta_w, delta_b = self.update_rule.get_update(
+            x=self._f_last,
+            w=self.w,
+            b=self.b,
+            logits=self._logits_last,
+            action=self._action_last,
+            reward=reward,
+        )  # [action]
         self.w += delta_w
         self.b += delta_b
         return
