@@ -1,3 +1,7 @@
+import os
+
+import pytest
+
 from hobj.data_loaders.behavior import load_highvar_behavior, load_oneshot_behavior
 from hobj.data_loaders.images import (
     load_image,
@@ -5,6 +9,11 @@ from hobj.data_loaders.images import (
     load_imageset_meta_highvar,
     load_imageset_meta_oneshot,
     load_imageset_meta_warmup,
+)
+
+pytestmark = pytest.mark.skipif(
+    os.environ.get("GITHUB_ACTIONS") == "true",
+    reason="Packaged dataset is not available on GitHub Actions runners.",
 )
 
 
@@ -51,7 +60,7 @@ def test_load_warmup_images():
 def test_load_probe_images():
     df = load_imageset_meta_catch()
     assert len(df) == 2
-    assert {"image_id",  "sha256", "relpath"} <= set(df.columns)
+    assert {"image_id", "sha256", "relpath"} <= set(df.columns)
 
 
 def test_load_image():
