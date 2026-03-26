@@ -54,50 +54,6 @@ class UpdateRule(ABC):
 
 
 # %%
-class Prototype(UpdateRule):
-    """
-    Simulates the decision boundary implemented by a prototype learner.
-    """
-
-    def reset(self):
-        self.ncounts = None
-
-    def get_update(
-        self,
-        x: np.ndarray,
-        w: np.ndarray,
-        b: np.ndarray,
-        logits: np.ndarray,
-        action: int,
-        reward: float,
-    ) -> Tuple[np.ndarray, Union[np.ndarray, np.generic, float]]:
-        if self.ncounts is None:
-            self.ncounts = np.zeros(w.shape[1])
-
-        if reward > 0:
-            # Received a positive example of the class associated with the action
-            i_updated_class = action
-        else:
-            # Unknown which class this is associated with. In the two-way case, it could be inferred, but in general, not.
-            if w.shape[1] == 2:
-                i_updated_class = 1 - action
-            else:
-                return np.zeros_like(w), 0
-
-        mu_cur = w[:, i_updated_class]
-        n = self.ncounts[i_updated_class]
-        mu_next = (n / (n + 1)) * mu_cur + (1 / (n + 1)) * x
-        norm_next = np.square(np.linalg.norm(mu_next))
-
-        delta_w = np.zeros(w.shape)
-        delta_w[:, i_updated_class] = mu_next - mu_cur
-
-        delta_b = np.zeros(b.shape)
-        delta_b[i_updated_class] = (-norm_next) - b[i_updated_class]
-
-        return delta_w, delta_b
-
-
 class Square(UpdateRule):
     def get_update(
         self,

@@ -41,9 +41,6 @@ class BinaryLearningModel(ABC):
 
 
 # %%
-
-
-# %%
 class LinearLearner(BinaryLearningModel):
     def __init__(
         self,

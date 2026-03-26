@@ -34,7 +34,6 @@ def _get_calibration_image_ids(cachedir: Path | None = None) -> list[ImageId]:
 def create_linear_learner(
     image_id_to_features: dict[ImageId, np.ndarray],
     update_rule_name: Literal[
-        "Prototype",
         "Square",
         "Perceptron",
         "Hinge",
