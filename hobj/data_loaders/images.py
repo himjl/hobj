@@ -1,4 +1,4 @@
-"""Load packaged image manifests as pandas DataFrames."""
+"""Load packaged image manifests and images."""
 
 from pathlib import Path
 
@@ -25,7 +25,8 @@ def _image_id_to_local_path_table() -> dict[ImageId, Path]:
     return table
 
 
-def load_image(image_id: ImageId) -> Image:
+def load_image(image_id: ImageId) -> Image.Image:
+    """Load an image by ``image_id`` from the packaged dataset."""
     path = _image_id_to_local_path_table().get(image_id)
     if path is None:
         raise ValueError(f"Image ID not found in any manifest: {image_id}")
@@ -40,14 +41,15 @@ def _load_image_manifest(
     required_columns: set[str],
     cachedir: Path | None = None,
 ) -> pd.DataFrame:
-    """Load a packaged image manifest and attach absolute image paths.
+    """Load a packaged image manifest after validating packaged image files.
 
     Args:
-        dataset_name: Name of the dataset directory under ``data/images``.
+        dataset_name: Name of the packaged manifest.
         required_columns: Columns that must exist in the manifest.
         cachedir: Optional root directory containing the packaged ``data`` tree.
+
     Returns:
-        A copy of the manifest as a DataFrame with an added ``image_path`` column.
+        A copy of the manifest as a DataFrame.
 
     Raises:
         ValueError: If required columns are missing.

@@ -1,7 +1,7 @@
 if __name__ == "__main__":
     # %%
     import matplotlib.pyplot as plt
-    from hobj.benchmarks import MutatorHighVarBenchmark
+    from hobj import MutatorHighVarBenchmark
     import numpy as np
 
     benchmark = MutatorHighVarBenchmark()

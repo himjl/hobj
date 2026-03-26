@@ -1,9 +1,10 @@
 from hobj.data_loaders.behavior import load_highvar_behavior, load_oneshot_behavior
 from hobj.data_loaders.images import (
+    load_image,
+    load_imageset_meta_catch,
     load_imageset_meta_highvar,
     load_imageset_meta_oneshot,
     load_imageset_meta_warmup,
-    load_imageset_meta_catch,
 )
 
 
@@ -24,10 +25,7 @@ def test_load_oneshot():
 def test_load_highvar_images():
     df = load_imageset_meta_highvar()
     assert len(df) == 12800
-    assert {"image_id", "category", "sha256", "relpath", "image_path"} <= set(
-        df.columns
-    )
-    assert df["image_path"].iloc[0].exists()
+    assert {"image_id", "category", "sha256", "relpath"} <= set(df.columns)
 
 
 def test_load_oneshot_images():
@@ -41,24 +39,23 @@ def test_load_oneshot_images():
         "base_image_id",
         "sha256",
         "relpath",
-        "image_path",
     } <= set(df.columns)
-    assert df["image_path"].iloc[0].exists()
 
 
 def test_load_warmup_images():
     df = load_imageset_meta_warmup()
     assert len(df) == 400
-    assert {"image_id", "category", "sha256", "relpath", "image_path"} <= set(
-        df.columns
-    )
-    assert df["image_path"].iloc[0].exists()
+    assert {"image_id", "category", "sha256", "relpath"} <= set(df.columns)
 
 
 def test_load_probe_images():
     df = load_imageset_meta_catch()
     assert len(df) == 2
-    assert {"image_id", "color", "text", "sha256", "relpath", "image_path"} <= set(
-        df.columns
-    )
-    assert df["image_path"].iloc[0].exists()
+    assert {"image_id", "color", "text", "sha256", "relpath"} <= set(df.columns)
+
+
+def test_load_image():
+    df = load_imageset_meta_highvar()
+    image = load_image(df["image_id"].iloc[0])
+    assert image.size[0] > 0
+    assert image.size[1] > 0
