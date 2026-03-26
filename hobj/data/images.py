@@ -116,7 +116,9 @@ def load_imageset_meta_catch(
     )
     return manifest_df.sort_values("image_id").reset_index(drop=True)
 
+
 # %% Image loaders:
+
 
 @lru_cache(maxsize=None)
 def _image_id_to_local_path_table(cache_root: Path) -> dict[ImageId, Path]:
@@ -153,9 +155,10 @@ def list_image_ids(cachedir: Path | None = None) -> list[ImageId]:
     table = _image_id_to_local_path_table(cache_root)
     return sorted(table.keys())
 
+
 def load_image(
-        image_id: ImageId,
-        cachedir: Path | None = None,
+    image_id: ImageId,
+    cachedir: Path | None = None,
 ) -> Image.Image:
     """Load an image by ``image_id`` from the packaged dataset.
 
@@ -170,10 +173,9 @@ def load_image(
     return Image.open(path)
 
 
-
 def get_image_path(
-        image_id: ImageId,
-        cachedir: Path | None = None,
+    image_id: ImageId,
+    cachedir: Path | None = None,
 ) -> Path:
     """Return the local path for an image in the packaged dataset.
 
@@ -197,7 +199,6 @@ def get_image_path(
             f"Expected image file to exist after resolving packaged data at: {path}"
         )
     return path
-
 
 
 # %%

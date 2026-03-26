@@ -62,7 +62,10 @@ def create_linear_learner(
         raise ValueError("alpha must be in the interval [0, 1]")
 
     f_calibration = np.array(
-        [image_id_to_features[ref] for ref in _get_calibration_image_ids(cachedir=cachedir)]
+        [
+            image_id_to_features[ref]
+            for ref in _get_calibration_image_ids(cachedir=cachedir)
+        ]
     )
     mu_calibration = np.mean(f_calibration, axis=0)
     norms_calibration = np.linalg.norm(f_calibration - mu_calibration, axis=1)
