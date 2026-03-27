@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "hobj"
-version = "2.0.0"
+version = "2.0.0.dev1"
 description = "Human object learning benchmarks"
 authors = [
     { name = "Michael J. Lee", email = "mil@mit.edu" }

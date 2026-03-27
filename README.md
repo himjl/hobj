@@ -8,18 +8,26 @@ This repository contains benchmarks for comparing models of object learning agai
   <img src="site/readme_images/human_learning_curves.svg" alt="Alt text" >
 </div>
 
-If you just want to download the raw data and images without using the `hobj` library, check out the [OSF repository](https://osf.io/pj6wm/files/osfstorage) for this project.
+If you just want to download the raw data and images without using the `hobj` library, you can do so at the [OSF repository](https://osf.io/pj6wm/files/osfstorage) for this project.
 
 ## Quickstart
 
 ### Install
 
-The `hobj` package works for Python >=3.12. After cloning this repository on your machine, navigate to this directory in your shell and run:
+The `hobj` package works for Python >=3.12.
 
-On first use, the packaged dataset is downloaded automatically from the OSF
-repository into a versioned cache directory under `~/.hobj_cache`. The default
-path is `~/.hobj_cache/pj6wm-v2/data`. In total, `hobj` takes up around ~1 GB
-of space on your computer.
+Install it from [PyPI](https://pypi.org/project/hobj/):
+
+```bash
+pip install hobj
+```
+
+If you prefer to use [uv](https://docs.astral.sh/uv/getting-started/installation/),
+you can install it with:
+
+```bash
+uv pip install hobj
+```
 
 
 ### Using `hobj` to comparing a linear learner against human learning data 
