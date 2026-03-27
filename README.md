@@ -1,14 +1,14 @@
-# `hobj`: human object learning benchmarks
+# Human few-shot object learning benchmarks
 
 [![CI](https://github.com/himjl/hobj/actions/workflows/ci.yml/badge.svg)](https://github.com/himjl/hobj/actions/workflows/ci.yml)
 
-This repository contains benchmarks for comparing models of object learning against measurements of human behavior, from Lee and DiCarlo 2023 (["How well do rudimentary plasticity rules predict adult visual object learning?"](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1011713)). It also lets you download the raw data and images from the experiments in the paper.
+This repository contains the few-shot object learning benchmarks described in ["How well do rudimentary plasticity rules predict adult visual object learning?" (Lee and DiCarlo, 2023)](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1011713). It also lets you download the raw data and images from the experiments in the paper.
 
 <div style="text-align: center;">
   <img src="site/readme_images/human_learning_curves.svg" alt="Alt text" >
 </div>
 
-If you just want to download the raw data and images without using the `hobj` library, you can do so at the [OSF repository](https://osf.io/pj6wm/files/osfstorage) for this project.
+If you'd like to download the raw data and images without using the `hobj` library, you can do so at the [OSF repository](https://osf.io/pj6wm/files/osfstorage) for this project.
 
 ## Quickstart
 
@@ -30,11 +30,11 @@ uv pip install hobj
 ```
 
 
-### Using `hobj` to comparing a linear learner against human learning data 
+### Using `hobj` to compare a model against human learning data 
 
-The template script below shows you how you can run a benchmark on a linear learning model based on your image encoding model. 
+The script below shows you how you can run evaluate a linear learning model – a model where new objects are learned by training a linear decoder using trial-and-error reward feedback – against humans. 
 
-All you need to do is have a way to process a `PIL.Image` into a vector of image features (as an `np.ndarray`). There are ~18,000 images that you'd need to compute image features for.    
+All you need is a way to process a `PIL.Image` into a vector of image features (as an `np.ndarray`). There are ~18,000 256x256 images that you'd need to compute image features for.    
 
 ```python
 import hobj
@@ -70,9 +70,6 @@ print(result.msen, result.msen_CI95)
 
 
 For more details (e.g., how to load the raw behavioral data or images in Python), check out the Jupyter notebooks in `examples/`.
-
-To use a different location, pass `cachedir=...` to a data loader or benchmark
-constructor, or prefetch manually with `hobj-download-data --cachedir /path/to/data`.
 
 ## Contact 
 If you have any questions, need help, or experience a bug, please don't hesitate to email me ([mil@mit.edu](mailto:name@example.com)), or open an issue on this repo!
