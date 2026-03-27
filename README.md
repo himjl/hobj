@@ -26,8 +26,6 @@ The template script below shows you how you can run a benchmark on a linear lear
 All you need to do is have a way to process a `PIL.Image` into a vector of image features (as an `np.ndarray`). There are ~18,000 images that you'd need to compute image features for.    
 
 ```python
-
-# Import hobj
 import hobj
 import numpy as np 
 
@@ -35,7 +33,9 @@ import numpy as np
 my_image_features: dict[str, np.ndarray] = {}
 for image_id in hobj.list_image_ids():
     image = hobj.load_image(image_id=image_id) # PIL.Image
-    my_image_features[image_id] = ... # Compute your features here! It should be a d-length vector.
+    
+    # Compute your features here:  
+    my_image_features[image_id] = ... # replace right hand side with your image-computable model
 
 # Assemble the learning model:
 model = hobj.create_linear_learner(
