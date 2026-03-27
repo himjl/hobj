@@ -1,2 +1,7 @@
 .idea
 .DS_Store
+.venv
+__pycache__/
+*.egg-info/
+dist/
+/data/

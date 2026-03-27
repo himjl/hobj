@@ -1,0 +1,28 @@
+lint:
+	uv run ruff check --fix && \
+	uv run ruff format
+
+check:
+	uv run ty check && \
+	uv run ruff check && \
+	uv run ruff format --check
+
+test:
+	uv run pytest tests
+
+
+publish:
+	@version="$$(uv version --short)"; \
+	case "$$version" in \
+		*.dev*) ;; \
+		*) \
+			printf "Version %s does not include .dev. Continue? [y/N] " "$$version"; \
+			read -r answer; \
+			case "$$answer" in \
+				y|Y) ;; \
+				*) echo "Aborted."; exit 1 ;; \
+			esac ;; \
+	esac; \
+	rm -rf dist && \
+	uv build && \
+	uv publish

@@ -1,0 +1,44 @@
+[build-system]
+requires = ["uv_build>=0.10.9,<0.11.0"]
+build-backend = "uv_build"
+
+[project]
+name = "hobj"
+version = "2.0.0"
+description = "Human object learning benchmarks"
+authors = [
+    { name = "Michael J. Lee", email = "mil@mit.edu" }
+]
+license = "MIT"
+license-files = ["license.md"]
+readme = "README.md"
+requires-python = ">=3.12"
+
+dependencies = [
+    "numpy>=2.2",
+    "pandas>=2.2",
+    "matplotlib>=3.9",
+    "requests>=2.32",
+    "tqdm>=4.67",
+    "pydantic>=2.10",
+    "xarray>=2025.1",
+    "scipy>=1.17.1",
+]
+
+[project.scripts]
+hobj-download-data = "hobj.data.download:main"
+
+[dependency-groups]
+dev = [
+    "enczoo==0.1.3.dev1",
+    "netcdf4>=1.7.4",
+    "pytest>=8.3",
+    "ipykernel>=7.2.0",
+    "scipy-stubs~=1.17.1",
+]
+
+[project.urls]
+repository = "https://github.com/himjl/hobj"
+
+[tool.uv.build-backend]
+module-root = ""
