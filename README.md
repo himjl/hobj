@@ -8,6 +8,7 @@ This repository contains benchmarks for comparing models of object learning agai
   <img src="site/readme_images/human_learning_curves.svg" alt="Alt text" >
 </div>
 
+If you just want to download the raw data and images without using the `hobj` library, check out the [OSF repository](https://osf.io/pj6wm/files/osfstorage) for this project.
 
 ## Quickstart
 
