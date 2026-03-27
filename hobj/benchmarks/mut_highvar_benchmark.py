@@ -11,7 +11,9 @@ from hobj.benchmarks.common import (
     simulate_sessions,
     summarize_bootstrap_score,
 )
-from hobj.benchmarks.binary_classification.estimator import LearningCurveStatistics
+from hobj.benchmarks.binary_classification.estimator import (
+    build_learning_curve_statistics,
+)
 from hobj.benchmarks.binary_classification.simulation import (
     BinaryClassificationSubtask,
     BinaryClassificationSubtaskResult,
@@ -110,7 +112,7 @@ class MutatorHighVarBenchmark:
                     )
                 self._target_data[name][worker_id] = [bool(v) for v in result.perf_seq]
 
-        self._target_statistics = LearningCurveStatistics(
+        self._target_statistics = build_learning_curve_statistics(
             subtask_name_to_results=self.subtask_name_to_results,
             nbootstrap_samples=self.num_bootstrap_samples,
             bootstrap_by_worker=self.bootstrap_by_worker,
@@ -121,7 +123,7 @@ class MutatorHighVarBenchmark:
         return self._target_data
 
     @property
-    def target_statistics(self) -> LearningCurveStatistics:
+    def target_statistics(self) -> xr.Dataset:
         return self._target_statistics
 
     @dataclass
@@ -130,9 +132,9 @@ class MutatorHighVarBenchmark:
         msen_sigma: float
         msen_CI95: Tuple[float, float]
         lapse_rate: xr.DataArray | None
-        model_statistics: LearningCurveStatistics
+        model_statistics: xr.Dataset
 
-    def __call__(
+    def score_model(
         self, learner: BinaryLearningModel, show_pbar: bool = False
     ) -> "MutatorHighVarBenchmark.LearningCurveBenchmarkResult":
         subtask_name_to_model_results: Dict[
@@ -149,7 +151,7 @@ class MutatorHighVarBenchmark:
                 nsimulations=self.num_simulations_per_subtask,
             )
 
-        model_statistics = LearningCurveStatistics(
+        model_statistics = build_learning_curve_statistics(
             subtask_name_to_results=subtask_name_to_model_results,
             nbootstrap_samples=self.num_bootstrap_samples,
             bootstrap_by_worker=False,

@@ -13,42 +13,56 @@ It also lets you download the raw data and images from the experiments in the pa
 </div>
 
 
-### Example usage
+### Installation
 
-Benchmarking a learning model simply requires the user to define a `hobj.learning_models.BinaryLearningModel` subclass.
-Then, an instance of that subclass may be passed in as an argument to a benchmark object:
+The `hobj` package works for Python >=3.12. After cloning this repository on your machine, navigate to this directory in your shell and run:
+
+``` pip install -e .```
+
+### Quickstart: comparing a linear learner against human learning data 
+
+The template script below shows you how you can run a benchmark on a linear learning model based on your image encoding model. 
+
+All you need to do is have a way to process a `PIL.Image` into a vector of image features (as an `np.ndarray`). There are ~18,000 images that you'd need to compute image features for.    
 
 ```python
+
+# Import hobj
 import hobj
+import numpy as np 
 
-# Load model: 
-model = hobj.RandomGuesser()  
+# Compute your features for the images 
+my_image_features: dict[str, np.ndarray] = {}
+for image_id in hobj.list_image_ids():
+    image = hobj.load_image(image_id=image_id) # PIL.Image
+    my_image_features[image_id] = ... # Compute your features here! It should be a d-length vector.
 
-# Load benchmark:
+# Assemble the learning model:
+model = hobj.create_linear_learner(
+    image_id_to_features=my_image_features,
+    update_rule_name='Square', # "Square", "Perceptron", "Hinge", "MAE", "Exponential", "CE", "REINFORCE",
+    alpha=1, # learning rate between [0, 1]
+)
+
+# Load the benchmark:
 benchmark = hobj.MutatorHighVarBenchmark()  # or hobj.MutatorOneshotBenchmark()
-result = benchmark(model)
 
-# Print the score and its CI:
+# Score the model:
+result = benchmark.score_model(model)
+
+# Print its score and its CI:
 print(result.msen, result.msen_CI95)
+
+# You can also check out more granular statistics of the model's behavior, like its learning curves: 
+# print(result.model_statistics)
 ```
 
-On first use, the packaged dataset is downloaded automatically into `./data`.
+Note that on first use, the packaged dataset is downloaded automatically into `./data`.
 To use a different location, pass `cachedir=...` to a data loader or benchmark
 constructor, or prefetch manually with `hobj-download-data --cachedir /path/to/data`.
 
 For more details, check out `examples/`.
 
-### Installation
-
-The `hobj` package works for Python >=3.11. After cloning this repository on your machine, navigate to this directory in your shell and run:
-
-``` pip install -e .```
-
-
-### Changes to codebase since publication
-This codebase was refactored in 2026 to improve the accessibility, performance, and quality of the code. Along the way, minor changes to the statistical analysis of the original codebase were introduced (see [changelist](site/changelist.md)). 
-
-To see the codebase at the time of publication, check out the repo with the `v1` tag [here](https://github.com/himjl/hobj/releases/tag/v1).
 
 ### Citation
 
@@ -64,3 +78,7 @@ To see the codebase at the time of publication, check out the repo with the `v1`
   publisher={Public Library of Science San Francisco, CA USA}
 }
 ```
+
+
+### Changes to codebase since publication
+This codebase was refactored in 2026 to improve the accessibility, performance, and quality of the code. Along the way, minor changes to the statistical analysis of the original codebase were introduced (see [changelist](site/changelist.md)). To see the codebase at the time of publication, check out the repo with the `v1` tag [here](https://github.com/himjl/hobj/releases/tag/v1).

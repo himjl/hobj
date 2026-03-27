@@ -23,18 +23,15 @@ dependencies = [
     "pydantic>=2.10",
     "xarray>=2025.1",
     "scipy>=1.17.1",
-    "ipykernel>=7.2.0",
-    "scipy-stubs~=1.17.1",
 ]
-
-[project.scripts]
-hobj-download-data = "hobj.data_loaders.download:main"
 
 [dependency-groups]
 dev = [
     "enczoo==0.1.3.dev1",
     "netcdf4>=1.7.4",
     "pytest>=8.3",
+    "ipykernel>=7.2.0",
+    "scipy-stubs~=1.17.1",
 ]
 
 [project.urls]

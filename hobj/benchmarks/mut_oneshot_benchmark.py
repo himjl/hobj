@@ -11,7 +11,9 @@ from hobj.benchmarks.common import (
     simulate_sessions,
     summarize_bootstrap_score,
 )
-from hobj.benchmarks.generalization.estimator import GeneralizationStatistics
+from hobj.benchmarks.generalization.estimator import (
+    build_generalization_statistics,
+)
 from hobj.benchmarks.generalization.simulator import (
     GeneralizationSessionResult,
     GeneralizationSubtask,
@@ -209,7 +211,7 @@ class MutatorOneshotBenchmark:
                 )
             )
 
-        self._target_statistics = GeneralizationStatistics(
+        self._target_statistics = build_generalization_statistics(
             results=self.results,
             perform_lapse_rate_correction=True,
             n_bootstrap_iterations=self.num_bootstrap_samples,
@@ -217,7 +219,7 @@ class MutatorOneshotBenchmark:
         )
 
     @property
-    def target_statistics(self) -> GeneralizationStatistics:
+    def target_statistics(self) -> xr.Dataset:
         gen_statistics = self._target_statistics
         return gen_statistics.assign_coords(
             transformation_type=(
@@ -241,9 +243,9 @@ class MutatorOneshotBenchmark:
         msen: float
         msen_sigma: float
         msen_CI95: Tuple[float, float]
-        model_statistics: GeneralizationStatistics
+        model_statistics: xr.Dataset
 
-    def __call__(
+    def score_model(
         self, learner: BinaryLearningModel, show_pbar: bool = False
     ) -> "MutatorOneshotBenchmark.GeneralizationBenchmarkResult":
         results: List[GeneralizationSessionResult] = []
@@ -260,7 +262,7 @@ class MutatorOneshotBenchmark:
                 )
             )
 
-        model_statistics = GeneralizationStatistics(
+        model_statistics = build_generalization_statistics(
             results=results,
             perform_lapse_rate_correction=False,
             n_bootstrap_iterations=self.num_bootstrap_samples,
