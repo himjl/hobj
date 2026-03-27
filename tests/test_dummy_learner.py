@@ -1,6 +1,6 @@
 import pytest
 
-from hobj.learning_models import RandomGuesser
+from hobj.learning_models.random_guesser import RandomGuesser
 
 
 @pytest.fixture

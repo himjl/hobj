@@ -2,45 +2,71 @@
 
 [![CI](https://github.com/himjl/hobj/actions/workflows/ci.yml/badge.svg)](https://github.com/himjl/hobj/actions/workflows/ci.yml)
 
-This repository contains benchmarks for comparing models of object learning against measurements of human behavior, from Lee and DiCarlo 2023 (["How well do rudimentary plasticity rules predict adult visual object learning?"](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1011713)).
+This repository contains benchmarks for comparing models of object learning against measurements of human behavior, from Lee and DiCarlo 2023 (["How well do rudimentary plasticity rules predict adult visual object learning?"](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1011713)). It also lets you download the raw data and images from the experiments in the paper.
 
 <div style="text-align: center;">
   <img src="site/readme_images/human_learning_curves.svg" alt="Alt text" >
 </div>
 
 
-### Example usage
+## Quickstart
 
-Benchmarking a learning model simply requires the user to define a `hobj.learning_models.BinaryLearningModel` subclass.
-Then, an instance of that subclass may be passed in as an argument to a benchmark object:
+### Install
+
+The `hobj` package works for Python >=3.12. After cloning this repository on your machine, navigate to this directory in your shell and run:
+
+# todo
+
+### Using `hobj` to comparing a linear learner against human learning data 
+
+The template script below shows you how you can run a benchmark on a linear learning model based on your image encoding model. 
+
+All you need to do is have a way to process a `PIL.Image` into a vector of image features (as an `np.ndarray`). There are ~18,000 images that you'd need to compute image features for.    
 
 ```python
 import hobj
+import numpy as np 
 
-# Load model: 
-model = hobj.learning_models.RandomGuesser() # A subclass of BinaryLearningModel
+# Compute your features for the images 
+my_image_features: dict[str, np.ndarray] = {}
+for image_id in hobj.list_image_ids():
+    image = hobj.load_image(image_id=image_id) # PIL.Image
+    
+    # Compute your features here:  
+    my_image_features[image_id] = ... # replace right hand side with your image-computable model
 
-# Load benchmark:
-benchmark = hobj.benchmarks.MutatorHighVarBenchmark() # Try benchmark 2: hobj.benchmarks.MutatorOneshotBenchmark()
-result = benchmark(model)
+# Assemble the learning model:
+model = hobj.create_linear_learner(
+    image_id_to_features=my_image_features,
+    update_rule_name='Square', # "Square", "Perceptron", "Hinge", "MAE", "Exponential", "CE", "REINFORCE",
+    alpha=1, # learning rate between [0, 1]
+)
 
-# Print the score and its CI:
+# Load the benchmark:
+benchmark = hobj.MutatorHighVarBenchmark()  # or hobj.MutatorOneshotBenchmark()
+
+# Score the model:
+result = benchmark.score_model(model)
+
+# Print its score and its CI:
 print(result.msen, result.msen_CI95)
+
+# You can also check out more granular statistics of the model's behavior, like its learning curves: 
+# print(result.model_statistics)
 ```
 
-For more details, check out `examples/`.
+Note that on first use, the packaged dataset is downloaded automatically into `./data`.
+To use a different location, pass `cachedir=...` to a data loader or benchmark
+constructor, or prefetch manually with `hobj-download-data --cachedir /path/to/data`.
 
-### Installation
+For more details (e.g., how to load the raw behavioral data or images), check out the Jupyter notebooks in `examples/`.
 
-The `hobj` package works for Python >=3.11. After cloning this repository on your machine, navigate to this directory in your shell and run:
+### Need help or have questions?
 
-``` pip install -e .```
+Please don't hesitate to email me ([mil@mit.edu](mailto:name@example.com)), or open an issue on this repo!
 
+## Citation
 
-### Changes to codebase since publication
-This codebase was refactored in January 2025 to improve the performance and quality of the code, and is now designated as `v2`. Along the way, minor refinements to the statistical analysis of the original codebase were introduced (see [changelist](site/changelist.md)). To see the codebase at the time of publication, check out the repo with the `v1` tag [here](https://github.com/himjl/hobj/releases/tag/v1).
-
-### Citation
 
 ```
 @article{lee2023well,
@@ -52,4 +78,9 @@ This codebase was refactored in January 2025 to improve the performance and qual
   pages={e1011713},
   year={2023},
   publisher={Public Library of Science San Francisco, CA USA}
-}```
+}
+```
+
+
+## Changes to codebase since publication
+This codebase was refactored in 2026 to improve the accessibility, performance, and quality of the code. Along the way, minor changes to the statistical analysis of the original codebase were introduced (see [changelist](site/changelist.md)). To see the codebase at the time of publication, check out the repo with the `v1` tag [here](https://github.com/himjl/hobj/releases/tag/v1).
