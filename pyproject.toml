@@ -18,7 +18,6 @@ dependencies = [
     "numpy>=2.2",
     "pandas>=2.2",
     "matplotlib>=3.9",
-    "platformdirs>=4.3",
     "requests>=2.32",
     "tqdm>=4.67",
     "pydantic>=2.10",

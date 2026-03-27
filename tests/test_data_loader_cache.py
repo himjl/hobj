@@ -248,13 +248,15 @@ def test_resolve_data_root_extracts_nested_images_archive_without_redownload(
     assert not (custom_cache / "images.tar.gz").exists()
 
 
-def test_get_default_data_root_uses_user_scoped_directory(monkeypatch) -> None:
-    monkeypatch.setattr(
-        download_module,
-        "user_data_dir",
-        lambda *args, **kwargs: "/tmp/hobj-platformdirs-root",
-    )
+def test_get_default_data_root_uses_versioned_home_cache(monkeypatch) -> None:
+    monkeypatch.setattr(download_module.Path, "home", lambda: Path("/tmp/fake-home"))
 
     resolved_path = download_module._get_default_data_root()
 
-    assert resolved_path == Path("/tmp/hobj-platformdirs-root/data").resolve()
+    assert (
+        resolved_path
+        == Path(
+            f"/tmp/fake-home/.hobj_cache/{download_module.OSF_NODE_ID}-"
+            f"{download_module.DATASET_CACHE_VERSION}/data"
+        ).resolve()
+    )

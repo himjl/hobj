@@ -11,12 +11,13 @@ from tempfile import TemporaryDirectory
 from urllib.parse import urlparse
 
 import requests
-from platformdirs import user_data_dir
 from tqdm import tqdm
 
 
 # Public OSF node that hosts the packaged HOBJ dataset files.
 OSF_NODE_ID = "pj6wm"
+# Bump this to invalidate the local cache when the packaged OSF dataset changes.
+DATASET_CACHE_VERSION = "v2"
 DATA_ARCHIVE_URL = (
     f"https://files.osf.io/v1/resources/{OSF_NODE_ID}/providers/osfstorage/?zip="
 )
@@ -39,10 +40,15 @@ def _get_default_data_root(repo_root: Path | None = None) -> Path:
             public function signature.
 
     Returns:
-        A user-scoped persistent data directory outside the installed package.
+        A persistent per-user cache directory outside the installed package.
     """
     del repo_root
-    return Path(user_data_dir("hobj", appauthor=False)).resolve() / "data"
+    return (
+        Path.home().resolve()
+        / ".hobj_cache"
+        / f"{OSF_NODE_ID}-{DATASET_CACHE_VERSION}"
+        / "data"
+    )
 
 
 def _get_missing_expected_paths(data_root: Path) -> list[Path]:

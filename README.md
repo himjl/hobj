@@ -16,7 +16,10 @@ If you just want to download the raw data and images without using the `hobj` li
 
 The `hobj` package works for Python >=3.12. After cloning this repository on your machine, navigate to this directory in your shell and run:
 
-Note that on first use, the packaged dataset is downloaded automatically into `./data` from the OSF repository. In total, `hobj` takes up around ~600 MB of space on your computer.
+On first use, the packaged dataset is downloaded automatically from the OSF
+repository into a versioned cache directory under `~/.hobj_cache`. The default
+path is `~/.hobj_cache/pj6wm-v1/data`. In total, `hobj` takes up around ~1 GB
+of space on your computer.
 
 
 ### Using `hobj` to comparing a linear learner against human learning data 
@@ -57,17 +60,11 @@ print(result.msen, result.msen_CI95)
 # print(result.model_statistics)
 ```
 
-On first use, the packaged dataset is downloaded automatically into a
-user-scoped data directory managed by `platformdirs` rather than into the
-repository root. On macOS this is typically
-`~/Library/Application Support/hobj/data`.
-To use a different location, pass `cachedir=...` to a data loader or benchmark
-constructor, or prefetch manually with
-`hobj-download-data --cachedir /path/to/data`.
 
 For more details (e.g., how to load the raw behavioral data or images in Python), check out the Jupyter notebooks in `examples/`.
 
-
+To use a different location, pass `cachedir=...` to a data loader or benchmark
+constructor, or prefetch manually with `hobj-download-data --cachedir /path/to/data`.
 
 ## Contact 
 If you have any questions, need help, or experience a bug, please don't hesitate to email me ([mil@mit.edu](mailto:name@example.com)), or open an issue on this repo!
