@@ -18,7 +18,7 @@ The `hobj` package works for Python >=3.12. After cloning this repository on you
 
 On first use, the packaged dataset is downloaded automatically from the OSF
 repository into a versioned cache directory under `~/.hobj_cache`. The default
-path is `~/.hobj_cache/pj6wm-v1/data`. In total, `hobj` takes up around ~1 GB
+path is `~/.hobj_cache/pj6wm-v2/data`. In total, `hobj` takes up around ~1 GB
 of space on your computer.
 
 
