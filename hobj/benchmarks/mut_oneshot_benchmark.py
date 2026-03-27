@@ -3,10 +3,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-import numpy as np
 import xarray as xr
 from tqdm import tqdm
 
+from hobj.benchmarks.common import (
+    compare_msen,
+    simulate_sessions,
+    summarize_bootstrap_score,
+)
 from hobj.benchmarks.generalization.estimator import GeneralizationStatistics
 from hobj.benchmarks.generalization.simulator import (
     GeneralizationSessionResult,
@@ -15,7 +19,6 @@ from hobj.benchmarks.generalization.simulator import (
 from hobj.data.behavior import load_oneshot_behavior
 from hobj.data.images import load_imageset_meta_oneshot
 from hobj.learning_models import BinaryLearningModel
-from hobj.stats.ci import estimate_basic_bootstrap_CI
 from hobj.types import ImageId
 
 
@@ -250,7 +253,7 @@ class MutatorOneshotBenchmark:
             disable=not show_pbar,
         ):
             results.extend(
-                self.simulate_model_behavior(
+                simulate_sessions(
                     subtask=subtask,
                     learner=learner,
                     nsimulations=self.num_simulations_per_subtask,
@@ -282,37 +285,17 @@ class MutatorOneshotBenchmark:
             condition_dims=("transformation",),
         )
 
-        msen_sigma = np.std(msen_boot, ddof=1)
-        msen_CI95 = estimate_basic_bootstrap_CI(
-            alpha=0.05,
+        summary = summarize_bootstrap_score(
             point_estimate=msen_point,
-            bootstrapped_point_estimates=np.array(msen_boot),
+            bootstrapped_point_estimates=msen_boot,
         )
 
         return self.GeneralizationBenchmarkResult(
             msen=float(msen_point),
-            msen_sigma=float(msen_sigma),
-            msen_CI95=msen_CI95,
+            msen_sigma=summary.sigma,
+            msen_CI95=summary.ci95,
             model_statistics=model_statistics,
         )
-
-    @staticmethod
-    def simulate_model_behavior(
-        subtask: GeneralizationSubtask,
-        learner: BinaryLearningModel,
-        nsimulations: int,
-    ) -> List[GeneralizationSessionResult]:
-        results = []
-        for _ in range(nsimulations):
-            learner.reset_state(seed=None)
-            results.append(
-                subtask.simulate_session(
-                    learner=learner,
-                    seed=None,
-                )
-            )
-
-        return results
 
     @staticmethod
     def _compare_generalization_patterns(
@@ -322,10 +305,12 @@ class MutatorOneshotBenchmark:
         target_varhat_phat: xr.DataArray,
         condition_dims: Tuple[str, ...],
     ) -> xr.DataArray:
-        msen = (
-            np.square(model_phat - target_phat).mean(condition_dims)
-            - model_varhat_phat.mean(condition_dims)
-            - target_varhat_phat.mean(condition_dims)
+        msen = compare_msen(
+            model_phat=model_phat,
+            model_varhat_phat=model_varhat_phat,
+            target_phat=target_phat,
+            target_varhat_phat=target_varhat_phat,
+            condition_dims=condition_dims,
         )
         return msen
 

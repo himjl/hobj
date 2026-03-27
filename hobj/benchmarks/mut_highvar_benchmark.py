@@ -1,11 +1,16 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Tuple
 
 import numpy as np
 import xarray as xr
 from tqdm import tqdm
 
+from hobj.benchmarks.common import (
+    compare_msen,
+    simulate_sessions,
+    summarize_bootstrap_score,
+)
 from hobj.benchmarks.binary_classification.estimator import LearningCurveStatistics
 from hobj.benchmarks.binary_classification.simulation import (
     BinaryClassificationSubtask,
@@ -14,7 +19,6 @@ from hobj.benchmarks.binary_classification.simulation import (
 from hobj.data.behavior import load_highvar_behavior
 from hobj.data.images import load_imageset_meta_highvar
 from hobj.learning_models import BinaryLearningModel
-from hobj.stats.ci import estimate_basic_bootstrap_CI
 
 
 class MutatorHighVarBenchmark:
@@ -139,7 +143,7 @@ class MutatorHighVarBenchmark:
             desc="Subtask simulations:",
             disable=not show_pbar,
         ):
-            subtask_name_to_model_results[subtask_name] = self.simulate_model_behavior(
+            subtask_name_to_model_results[subtask_name] = simulate_sessions(
                 subtask=self.subtask_name_to_subtask[subtask_name],
                 learner=learner,
                 nsimulations=self.num_simulations_per_subtask,
@@ -169,38 +173,18 @@ class MutatorHighVarBenchmark:
             fit_lapse_rate=True,
         )
 
-        msen_sigma = np.std(msen_boot, ddof=1)
-        msen_CI95 = estimate_basic_bootstrap_CI(
-            alpha=0.05,
+        summary = summarize_bootstrap_score(
             point_estimate=msen_point,
-            bootstrapped_point_estimates=np.array(msen_boot),
+            bootstrapped_point_estimates=msen_boot,
         )
 
         return self.LearningCurveBenchmarkResult(
             msen=float(msen_point),
-            msen_sigma=float(msen_sigma),
-            msen_CI95=msen_CI95,
+            msen_sigma=summary.sigma,
+            msen_CI95=summary.ci95,
             lapse_rate=lapse_rate,
             model_statistics=model_statistics,
         )
-
-    @staticmethod
-    def simulate_model_behavior(
-        subtask: BinaryClassificationSubtask,
-        learner: BinaryLearningModel,
-        nsimulations: int,
-    ) -> List[BinaryClassificationSubtaskResult]:
-        results = []
-        for _ in range(nsimulations):
-            learner.reset_state(seed=None)
-            results.append(
-                subtask.simulate_session(
-                    learner=learner,
-                    seed=None,
-                )
-            )
-
-        return results
 
     @classmethod
     def _compare_learning_curves(
@@ -211,7 +195,7 @@ class MutatorHighVarBenchmark:
         target_varhat_phat: xr.DataArray,
         condition_dims: Tuple[str, ...],
         fit_lapse_rate: bool,
-    ) -> Tuple[Union[np.ndarray, np.generic], Optional[xr.DataArray]]:
+    ) -> Tuple[xr.DataArray, xr.DataArray | None]:
         if fit_lapse_rate:
             lapse_rate = cls._fit_lapse_rate(
                 pmodel=model_phat,
@@ -223,10 +207,12 @@ class MutatorHighVarBenchmark:
         else:
             lapse_rate = None
 
-        msen = (
-            np.square(model_phat - target_phat).mean(condition_dims)
-            - model_varhat_phat.mean(condition_dims)
-            - target_varhat_phat.mean(condition_dims)
+        msen = compare_msen(
+            model_phat=model_phat,
+            model_varhat_phat=model_varhat_phat,
+            target_phat=target_phat,
+            target_varhat_phat=target_varhat_phat,
+            condition_dims=condition_dims,
         )
         return msen, lapse_rate
 
@@ -235,7 +221,7 @@ class MutatorHighVarBenchmark:
         pmodel: xr.DataArray,
         ptarget: xr.DataArray,
         condition_dims: Tuple[str, ...],
-    ) -> Union[np.ndarray, np.generic]:
+    ) -> xr.DataArray:
         nway = 2
         numerator = -(
             2 * pmodel / nway
