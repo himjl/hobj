@@ -1,22 +1,29 @@
 import collections
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
-from hobj.benchmarks.generalization.benchmark import (
-    GeneralizationBenchmark,
-    GeneralizationBenchmarkConfig,
-    GeneralizationSessionResult,
-)
+import numpy as np
+import xarray as xr
+from tqdm import tqdm
+
 from hobj.benchmarks.generalization.estimator import GeneralizationStatistics
-from hobj.benchmarks.generalization.simulator import GeneralizationSubtask
+from hobj.benchmarks.generalization.simulator import (
+    GeneralizationSessionResult,
+    GeneralizationSubtask,
+)
 from hobj.data.behavior import load_oneshot_behavior
 from hobj.data.images import load_imageset_meta_oneshot
-
+from hobj.learning_models import BinaryLearningModel
+from hobj.stats.ci import estimate_basic_bootstrap_CI
 from hobj.types import ImageId
 
 
-# %%
-class MutatorOneshotBenchmark(GeneralizationBenchmark):
+class MutatorOneshotBenchmark:
+    num_simulations_per_subtask = 500
+    num_bootstrap_samples = 1000
+    bootstrap_target_by_worker = True
+
     subtask_names = [
         "MutatorOneshotObject00,MutatorOneshotObject43",
         "MutatorOneshotObject01,MutatorOneshotObject37",
@@ -91,14 +98,12 @@ class MutatorOneshotBenchmark(GeneralizationBenchmark):
     ]
 
     def __init__(self, cachedir: Path | None = None):
-        support_trials = {0, 1, 2, 3, 4, 5, 6, 7, 8}
+        support_trials = set(range(9))
         catch_trials = {9, 14, 19}
 
-        # Load image manifest
         images_df = load_imageset_meta_oneshot(cachedir=cachedir)
         image_id_to_row = images_df.set_index("image_id")
 
-        # Map image refs to transformation ids
         image_ref_to_transformation_id: Dict[ImageId, str] = {}
         cat_to_support_image: Dict[str, ImageId] = {}
         cat_to_test_images: Dict[str, List[ImageId]] = {}
@@ -111,46 +116,43 @@ class MutatorOneshotBenchmark(GeneralizationBenchmark):
             image_ref_to_transformation_id[image_id] = transformation_id
 
             if row["transformation"] == "original":
-                if row["category"] not in cat_to_support_image:
-                    cat_to_support_image[row["category"]] = image_id
-                else:
+                if row["category"] in cat_to_support_image:
                     raise ValueError(
                         f"Multiple support images for category {row['category']}"
                     )
+                cat_to_support_image[row["category"]] = image_id
             else:
                 if row["category"] not in cat_to_test_images:
                     cat_to_test_images[row["category"]] = []
 
                 cat_to_test_images[row["category"]].append(image_id)
 
-        # Assemble subtask simulators
-        subtasks = []
+        self.subtasks = []
         for subtask_name in self.subtask_names:
-            catA, catB = sorted(subtask_name.split(","))
+            cat_a, cat_b = sorted(subtask_name.split(","))
+            test_images_a = cat_to_test_images[cat_a]
+            test_images_b = cat_to_test_images[cat_b]
 
-            support_imageA = cat_to_support_image[catA]
-            support_imageB = cat_to_support_image[catB]
-            test_imagesA = cat_to_test_images[catA]
-            test_imagesB = cat_to_test_images[catB]
-            assert len(test_imagesA) == len(test_imagesB) == 60
+            if len(test_images_a) != 60 or len(test_images_b) != 60:
+                raise ValueError(
+                    f"Expected 60 test images per category for {subtask_name}, "
+                    f"but got {len(test_images_a)} and {len(test_images_b)}."
+                )
 
-            subtask = GeneralizationSubtask(
-                support_imageA=support_imageA,
-                support_imageB=support_imageB,
-                test_imagesA=test_imagesA,
-                test_imagesB=test_imagesB,
-                image_ref_to_transformation=image_ref_to_transformation_id,
+            self.subtasks.append(
+                GeneralizationSubtask(
+                    support_imageA=cat_to_support_image[cat_a],
+                    support_imageB=cat_to_support_image[cat_b],
+                    test_imagesA=test_images_a,
+                    test_imagesB=test_images_b,
+                    image_ref_to_transformation=image_ref_to_transformation_id,
+                )
             )
-            subtasks.append(subtask)
 
-        # Package human data into format expected by benchmark
         oneshot_df = load_oneshot_behavior(cachedir=cachedir)
+        self.results: List[GeneralizationSessionResult] = []
 
-        results = []
-
-        for session, session_df in oneshot_df.groupby(
-                ["assignment_id", "slot"], sort=False
-        ):
+        for _, session_df in oneshot_df.groupby(["assignment_id", "slot"], sort=False):
             session_df = session_df.sort_values("trial")
             transformation_to_kn = collections.defaultdict(lambda: [0, 0])
             kcatch = 0
@@ -163,51 +165,57 @@ class MutatorOneshotBenchmark(GeneralizationBenchmark):
                 annotation = image_id_to_row.loc[image_id]
                 perf = bool(row["perf"])
 
-                # Record performance in relevant slot
                 if i_trial in support_trials:
-                    assert annotation["transformation"] == "original"
+                    if annotation["transformation"] != "original":
+                        raise ValueError(
+                            f"Expected support trial {i_trial} to use an original image."
+                        )
                 elif i_trial in catch_trials:
-                    assert annotation["transformation"] == "original"
+                    if annotation["transformation"] != "original":
+                        raise ValueError(
+                            f"Expected catch trial {i_trial} to use an original image."
+                        )
                     kcatch += perf
                     ncatch += 1
                 else:
-                    assert annotation["transformation"] != "original"
-                    transformation_id = image_ref_to_transformation_id[image_id]
+                    if annotation["transformation"] == "original":
+                        raise ValueError(
+                            f"Expected generalization trial {i_trial} to use a transformed image."
+                        )
 
-                    # Keep only benchmarked transformations
+                    transformation_id = image_ref_to_transformation_id[image_id]
                     if transformation_id in self.transformation_ids:
                         transformation_to_kn[transformation_id][0] += perf
                         transformation_to_kn[transformation_id][1] += 1
 
-            # Infer subtask name from observed categories
-            assert len(observed_categories) == 2
+            if len(observed_categories) != 2:
+                raise ValueError(
+                    f"Expected two categories for a one-shot session, got {observed_categories}."
+                )
+
             subtask_name = ",".join(sorted(observed_categories))
             if subtask_name not in self.subtask_names:
                 raise ValueError(f"Unexpected subtask name: {subtask_name}")
 
-            # Package result
-            result = GeneralizationSessionResult(
-                transformation_to_kn=transformation_to_kn,
-                kcatch=kcatch,
-                ncatch=ncatch,
-                worker_id=session_df["worker_id"].iloc[0],
+            self.results.append(
+                GeneralizationSessionResult(
+                    transformation_to_kn=transformation_to_kn,
+                    kcatch=kcatch,
+                    ncatch=ncatch,
+                    worker_id=session_df["worker_id"].iloc[0],
+                )
             )
-            results.append(result)
 
-        # %% Assemble benchmark config
-        config = GeneralizationBenchmarkConfig(
-            results=results,
-            subtasks=subtasks,
-            num_simulations_per_subtask=500,
-            num_bootstrap_samples=1000,
-            bootstrap_target_by_worker=True,
+        self._target_statistics = GeneralizationStatistics(
+            results=self.results,
+            perform_lapse_rate_correction=True,
+            n_bootstrap_iterations=self.num_bootstrap_samples,
+            bootstrap_by_worker=self.bootstrap_target_by_worker,
         )
-
-        super().__init__(config=config)
 
     @property
     def target_statistics(self) -> GeneralizationStatistics:
-        gen_statistics: GeneralizationStatistics = self._generalization_statistics
+        gen_statistics = self._target_statistics
         return gen_statistics.assign_coords(
             transformation_type=(
                 ["transformation"],
@@ -224,6 +232,102 @@ class MutatorOneshotBenchmark(GeneralizationBenchmark):
                 ],
             ),
         )
+
+    @dataclass
+    class GeneralizationBenchmarkResult:
+        msen: float
+        msen_sigma: float
+        msen_CI95: Tuple[float, float]
+        model_statistics: GeneralizationStatistics
+
+    def __call__(
+        self, learner: BinaryLearningModel, show_pbar: bool = False
+    ) -> "MutatorOneshotBenchmark.GeneralizationBenchmarkResult":
+        results: List[GeneralizationSessionResult] = []
+        for subtask in tqdm(
+            self.subtasks,
+            desc="Subtask simulations:",
+            disable=not show_pbar,
+        ):
+            results.extend(
+                self.simulate_model_behavior(
+                    subtask=subtask,
+                    learner=learner,
+                    nsimulations=self.num_simulations_per_subtask,
+                )
+            )
+
+        model_statistics = GeneralizationStatistics(
+            results=results,
+            perform_lapse_rate_correction=False,
+            n_bootstrap_iterations=self.num_bootstrap_samples,
+            bootstrap_by_worker=False,
+        )
+        model_statistics = model_statistics.sel(
+            transformation=self.target_statistics.transformation
+        )
+
+        msen_point = self._compare_generalization_patterns(
+            model_phat=model_statistics.phat,
+            model_varhat_phat=model_statistics.varhat_phat,
+            target_phat=self.target_statistics.phat,
+            target_varhat_phat=self.target_statistics.varhat_phat,
+            condition_dims=("transformation",),
+        )
+        msen_boot = self._compare_generalization_patterns(
+            model_phat=model_statistics.boot_phat,
+            model_varhat_phat=model_statistics.boot_varhat_phat,
+            target_phat=self.target_statistics.boot_phat,
+            target_varhat_phat=self.target_statistics.boot_varhat_phat,
+            condition_dims=("transformation",),
+        )
+
+        msen_sigma = np.std(msen_boot, ddof=1)
+        msen_CI95 = estimate_basic_bootstrap_CI(
+            alpha=0.05,
+            point_estimate=msen_point,
+            bootstrapped_point_estimates=np.array(msen_boot),
+        )
+
+        return self.GeneralizationBenchmarkResult(
+            msen=float(msen_point),
+            msen_sigma=float(msen_sigma),
+            msen_CI95=msen_CI95,
+            model_statistics=model_statistics,
+        )
+
+    @staticmethod
+    def simulate_model_behavior(
+        subtask: GeneralizationSubtask,
+        learner: BinaryLearningModel,
+        nsimulations: int,
+    ) -> List[GeneralizationSessionResult]:
+        results = []
+        for _ in range(nsimulations):
+            learner.reset_state(seed=None)
+            results.append(
+                subtask.simulate_session(
+                    learner=learner,
+                    seed=None,
+                )
+            )
+
+        return results
+
+    @staticmethod
+    def _compare_generalization_patterns(
+        model_phat: xr.DataArray,
+        model_varhat_phat: xr.DataArray,
+        target_phat: xr.DataArray,
+        target_varhat_phat: xr.DataArray,
+        condition_dims: Tuple[str, ...],
+    ) -> xr.DataArray:
+        msen = (
+            np.square(model_phat - target_phat).mean(condition_dims)
+            - model_varhat_phat.mean(condition_dims)
+            - target_varhat_phat.mean(condition_dims)
+        )
+        return msen
 
 
 if __name__ == "__main__":
