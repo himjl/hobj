@@ -25,6 +25,9 @@ dependencies = [
     "scipy>=1.17.1",
 ]
 
+[project.scripts]
+hobj-download-data = "hobj.data.download:main"
+
 [dependency-groups]
 dev = [
     "enczoo==0.1.3.dev1",

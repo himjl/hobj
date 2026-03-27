@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import shutil
 import tarfile
+import zipfile
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.parse import urlparse
@@ -13,9 +14,12 @@ import requests
 from tqdm import tqdm
 
 
+# Public OSF node that hosts the packaged HOBJ dataset files.
+OSF_NODE_ID = "pj6wm"
+# Bump this to invalidate the local cache when the packaged OSF dataset changes.
+DATASET_CACHE_VERSION = "v2"
 DATA_ARCHIVE_URL = (
-    "https://hlbdatasets.s3.us-east-1.amazonaws.com/"
-    "lee-dicarlo-2023-learning-data.tar.gz"
+    f"https://files.osf.io/v1/resources/{OSF_NODE_ID}/providers/osfstorage/?zip="
 )
 EXPECTED_DATA_RELATIVE_PATHS = (
     Path("meta-MutatorHighVarImageset.csv"),
@@ -28,17 +32,23 @@ EXPECTED_DATA_RELATIVE_PATHS = (
 _DOWNLOAD_CHUNK_SIZE_BYTES = 1024 * 1024
 
 
-def _get_repo_root() -> Path:
-    """Return the repository root for this package."""
-    return Path(__file__).resolve().parents[2]
-
-
 def _get_default_data_root(repo_root: Path | None = None) -> Path:
-    """Return the default packaged data directory."""
-    resolved_repo_root = (
-        repo_root if repo_root is not None else _get_repo_root()
-    ).resolve()
-    return resolved_repo_root / "data"
+    """Return the default packaged data directory.
+
+    Args:
+        repo_root: Unused legacy parameter kept for compatibility with the
+            public function signature.
+
+    Returns:
+        A persistent per-user cache directory outside the installed package.
+    """
+    del repo_root
+    return (
+        Path.home().resolve()
+        / ".hobj_cache"
+        / f"{OSF_NODE_ID}-{DATASET_CACHE_VERSION}"
+        / "data"
+    )
 
 
 def _get_missing_expected_paths(data_root: Path) -> list[Path]:
@@ -52,7 +62,16 @@ def _get_missing_expected_paths(data_root: Path) -> list[Path]:
 
 def _derive_archive_path(repo_root: Path, url: str) -> Path:
     """Return the on-disk path for the downloaded archive."""
-    archive_name = Path(urlparse(url).path).name
+    parsed_url = urlparse(url)
+    path_segments = [segment for segment in parsed_url.path.split("/") if segment]
+    if (
+        parsed_url.query == "zip="
+        and len(path_segments) >= 4
+        and path_segments[:3] == ["v1", "resources", path_segments[2]]
+    ):
+        archive_name = f"{path_segments[2]}.zip"
+    else:
+        archive_name = Path(parsed_url.path).name
     if not archive_name:
         raise ValueError(f"Could not derive archive filename from URL: {url}")
     return repo_root / archive_name
@@ -95,6 +114,25 @@ def _safe_extract_tarball(archive_path: Path, destination: Path) -> None:
         tar.extractall(destination, filter="data")
 
 
+def _safe_extract_zipfile(archive_path: Path, destination: Path) -> None:
+    """Extract a zipfile while preventing path traversal.
+
+    Args:
+        archive_path: Zipfile to extract.
+        destination: Destination directory for extracted contents.
+
+    Raises:
+        ValueError: If a zip entry would escape the extraction directory.
+    """
+    destination = destination.resolve()
+
+    with zipfile.ZipFile(archive_path) as archive:
+        for member in archive.infolist():
+            member_path = (destination / member.filename).resolve()
+            member_path.relative_to(destination)
+        archive.extractall(destination)
+
+
 def _find_extracted_data_root(extraction_root: Path) -> Path:
     """Return the packaged data directory from an extracted archive tree.
 
@@ -120,6 +158,26 @@ def _find_extracted_data_root(extraction_root: Path) -> Path:
     )
 
 
+def _extract_nested_images_archive(data_root: Path) -> None:
+    """Extract ``images.tar.gz`` into ``data/images`` when present.
+
+    Args:
+        data_root: Extracted packaged data directory.
+    """
+    images_archive_path = data_root / "images.tar.gz"
+    images_root = data_root / "images"
+    if images_root.exists():
+        if images_archive_path.exists():
+            images_archive_path.unlink()
+        return
+
+    if not images_archive_path.exists():
+        return
+
+    _safe_extract_tarball(archive_path=images_archive_path, destination=data_root)
+    images_archive_path.unlink()
+
+
 def resolve_data_root(
     *,
     cachedir: Path | None = None,
@@ -141,6 +199,7 @@ def resolve_data_root(
     ).resolve()
     if _get_missing_expected_paths(data_root):
         return download_data(cachedir=data_root, url=DATA_ARCHIVE_URL)
+    _extract_nested_images_archive(data_root)
     return data_root
 
 
@@ -171,7 +230,8 @@ def download_data(
 
     Raises:
         requests.HTTPError: If the archive download fails.
-        tarfile.TarError: If the archive cannot be unpacked.
+        tarfile.TarError: If a tar archive cannot be unpacked.
+        zipfile.BadZipFile: If the zip archive cannot be unpacked.
         ValueError: If the archive path is invalid or extraction would escape
             the extraction directory.
         FileNotFoundError: If extraction completes but the expected dataset
@@ -192,8 +252,9 @@ def download_data(
 
     with TemporaryDirectory(dir=archive_root) as extraction_root_str:
         extraction_root = Path(extraction_root_str)
-        _safe_extract_tarball(archive_path=archive_path, destination=extraction_root)
+        _safe_extract_zipfile(archive_path=archive_path, destination=extraction_root)
         extracted_data_root = _find_extracted_data_root(extraction_root)
+        _extract_nested_images_archive(extracted_data_root)
         shutil.copytree(extracted_data_root, data_root, dirs_exist_ok=True)
 
     missing_paths = _get_missing_expected_paths(data_root)

@@ -8,6 +8,7 @@ This repository contains benchmarks for comparing models of object learning agai
   <img src="site/readme_images/human_learning_curves.svg" alt="Alt text" >
 </div>
 
+If you just want to download the raw data and images without using the `hobj` library, check out the [OSF repository](https://osf.io/pj6wm/files/osfstorage) for this project.
 
 ## Quickstart
 
@@ -15,7 +16,11 @@ This repository contains benchmarks for comparing models of object learning agai
 
 The `hobj` package works for Python >=3.12. After cloning this repository on your machine, navigate to this directory in your shell and run:
 
-# todo
+On first use, the packaged dataset is downloaded automatically from the OSF
+repository into a versioned cache directory under `~/.hobj_cache`. The default
+path is `~/.hobj_cache/pj6wm-v1/data`. In total, `hobj` takes up around ~1 GB
+of space on your computer.
+
 
 ### Using `hobj` to comparing a linear learner against human learning data 
 
@@ -55,18 +60,22 @@ print(result.msen, result.msen_CI95)
 # print(result.model_statistics)
 ```
 
-Note that on first use, the packaged dataset is downloaded automatically into `./data`.
+
+For more details (e.g., how to load the raw behavioral data or images in Python), check out the Jupyter notebooks in `examples/`.
+
 To use a different location, pass `cachedir=...` to a data loader or benchmark
 constructor, or prefetch manually with `hobj-download-data --cachedir /path/to/data`.
 
-For more details (e.g., how to load the raw behavioral data or images), check out the Jupyter notebooks in `examples/`.
+## Contact 
+If you have any questions, need help, or experience a bug, please don't hesitate to email me ([mil@mit.edu](mailto:name@example.com)), or open an issue on this repo!
 
-### Need help or have questions?
 
-Please don't hesitate to email me ([mil@mit.edu](mailto:name@example.com)), or open an issue on this repo!
+
+## Changes to codebase since publication
+This codebase was overhauled in 2026 to improve its accessibility, performance, and quality. Along the way, minor changes to the statistical analysis procedure were introduced, along with changes to the names of the original filenames (see [changelist](site/changelist.md)). To see the codebase at the time of publication, check out the repo with the `v1` tag [here](https://github.com/himjl/hobj/releases/tag/v1).
+
 
 ## Citation
-
 
 ```
 @article{lee2023well,
@@ -80,7 +89,3 @@ Please don't hesitate to email me ([mil@mit.edu](mailto:name@example.com)), or o
   publisher={Public Library of Science San Francisco, CA USA}
 }
 ```
-
-
-## Changes to codebase since publication
-This codebase was refactored in 2026 to improve the accessibility, performance, and quality of the code. Along the way, minor changes to the statistical analysis of the original codebase were introduced (see [changelist](site/changelist.md)). To see the codebase at the time of publication, check out the repo with the `v1` tag [here](https://github.com/himjl/hobj/releases/tag/v1).
