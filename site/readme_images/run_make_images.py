@@ -40,5 +40,5 @@ if __name__ == "__main__":
     plt.gca().spines["right"].set_visible(False)
 
     plt.tight_layout()
-    plt.savefig("./human_learning_curves.svg", transparent=True)
+    plt.savefig("./human_learning_curves.svg", transparent=False)
     plt.show()
