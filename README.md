@@ -4,7 +4,9 @@ from hobj.learning_models import random_guesser
 
 [![CI](https://github.com/himjl/hobj/actions/workflows/ci.yml/badge.svg)](https://github.com/himjl/hobj/actions/workflows/ci.yml)
 
-This repository contains benchmarks for comparing models of object learning against measurements of human behavior, from Lee and DiCarlo 2023 (["How well do rudimentary plasticity rules predict adult visual object learning?"](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1011713)).
+This repository contains benchmarks for comparing models of object learning against measurements of human behavior, from Lee and DiCarlo 2023 (["How well do rudimentary plasticity rules predict adult visual object learning?"](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1011713)). 
+
+It also lets you download the raw data and images from the experiments in the paper.
 
 <div style="text-align: center;">
   <img src="site/readme_images/human_learning_curves.svg" alt="Alt text" >
@@ -20,10 +22,10 @@ Then, an instance of that subclass may be passed in as an argument to a benchmar
 import hobj
 
 # Load model: 
-model = random_guesser.RandomGuesser()  # A subclass of BinaryLearningModel
+model = hobj.RandomGuesser()  
 
 # Load benchmark:
-benchmark = hobj.MutatorHighVarBenchmark()  # Try benchmark 2: hobj.MutatorOneshotBenchmark()
+benchmark = hobj.MutatorHighVarBenchmark()  # or hobj.MutatorOneshotBenchmark()
 result = benchmark(model)
 
 # Print the score and its CI:
@@ -44,7 +46,9 @@ The `hobj` package works for Python >=3.11. After cloning this repository on you
 
 
 ### Changes to codebase since publication
-This codebase was refactored in January 2025 to improve the performance and quality of the code, and is now designated as `v2`. Along the way, minor refinements to the statistical analysis of the original codebase were introduced (see [changelist](site/changelist.md)). To see the codebase at the time of publication, check out the repo with the `v1` tag [here](https://github.com/himjl/hobj/releases/tag/v1).
+This codebase was refactored in 2026 to improve the accessibility, performance, and quality of the code. Along the way, minor changes to the statistical analysis of the original codebase were introduced (see [changelist](site/changelist.md)). 
+
+To see the codebase at the time of publication, check out the repo with the `v1` tag [here](https://github.com/himjl/hobj/releases/tag/v1).
 
 ### Citation
 
@@ -58,4 +62,5 @@ This codebase was refactored in January 2025 to improve the performance and qual
   pages={e1011713},
   year={2023},
   publisher={Public Library of Science San Francisco, CA USA}
-}```
+}
+```

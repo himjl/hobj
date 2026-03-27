@@ -25,7 +25,7 @@ class MutatorHighVarBenchmark(LearningCurveBenchmark):
         images_df = load_imageset_meta_highvar(cachedir=cachedir)
 
         # Load raw human session data for benchmark:
-        sessions = load_highvar_behavior(
+        df_behavior = load_highvar_behavior(
             remove_probe_trials=True,
             cachedir=cachedir,
         )
@@ -44,15 +44,15 @@ class MutatorHighVarBenchmark(LearningCurveBenchmark):
         subtask_name_to_subtask = {}
 
         # Iterate over worker sessions:
-        for assignment_id, session in sessions.groupby("assignment_id", sort=False):
+        for assignment_id, session in df_behavior.groupby("assignment_id", sort=False):
             categories = set()
             perf_seq: List[bool] = []
 
             # Iterate over trials:
             session = session.sort_values("trial")
-            for reward, image_id in zip(session.perf, session.image_id):
+            for perf, image_id in zip(session.perf, session.image_id):
                 categories.add(image_id_to_category[image_id])
-                perf_seq.append(bool(reward))
+                perf_seq.append(bool(perf))
 
             # Infer subtask from the categories observed in the session:
             assert (
@@ -106,4 +106,3 @@ class MutatorHighVarBenchmark(LearningCurveBenchmark):
 # %%
 if __name__ == "__main__":
     experiment = MutatorHighVarBenchmark()
-    print(sorted(experiment.config.subtask_name_to_data.keys()))

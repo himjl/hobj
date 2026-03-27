@@ -16,8 +16,6 @@ from hobj.types import ImageId
 
 
 # %%
-
-
 class MutatorOneshotBenchmark(GeneralizationBenchmark):
     subtask_names = [
         "MutatorOneshotObject00,MutatorOneshotObject43",
@@ -151,7 +149,7 @@ class MutatorOneshotBenchmark(GeneralizationBenchmark):
         results = []
 
         for session, session_df in oneshot_df.groupby(
-            ["assignment_id", "slot"], sort=False
+                ["assignment_id", "slot"], sort=False
         ):
             session_df = session_df.sort_values("trial")
             transformation_to_kn = collections.defaultdict(lambda: [0, 0])
