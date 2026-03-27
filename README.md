@@ -1,5 +1,3 @@
-from hobj.learning_models import random_guesser
-
 # `hobj`: human object learning benchmarks
 
 [![CI](https://github.com/himjl/hobj/actions/workflows/ci.yml/badge.svg)](https://github.com/himjl/hobj/actions/workflows/ci.yml)
@@ -17,7 +15,7 @@ This repository contains benchmarks for comparing models of object learning agai
 
 The `hobj` package works for Python >=3.12. After cloning this repository on your machine, navigate to this directory in your shell and run:
 
-``` pip install -e .```
+# todo
 
 ### Using `hobj` to comparing a linear learner against human learning data 
 
@@ -65,10 +63,10 @@ For more details (e.g., how to load the raw behavioral data or images), check ou
 
 ### Need help or have questions?
 
-Please don't hesitate to send me an email ([mil@mit.edu](mailto:name@example.com)), or open an issue on this repo!
-
+Please don't hesitate to email me ([mil@mit.edu](mailto:name@example.com)), or open an issue on this repo!
 
 ## Citation
+
 
 ```
 @article{lee2023well,
