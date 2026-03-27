@@ -4,22 +4,22 @@ from hobj.learning_models import random_guesser
 
 [![CI](https://github.com/himjl/hobj/actions/workflows/ci.yml/badge.svg)](https://github.com/himjl/hobj/actions/workflows/ci.yml)
 
-This repository contains benchmarks for comparing models of object learning against measurements of human behavior, from Lee and DiCarlo 2023 (["How well do rudimentary plasticity rules predict adult visual object learning?"](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1011713)). 
-
-It also lets you download the raw data and images from the experiments in the paper.
+This repository contains benchmarks for comparing models of object learning against measurements of human behavior, from Lee and DiCarlo 2023 (["How well do rudimentary plasticity rules predict adult visual object learning?"](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1011713)). It also lets you download the raw data and images from the experiments in the paper.
 
 <div style="text-align: center;">
   <img src="site/readme_images/human_learning_curves.svg" alt="Alt text" >
 </div>
 
 
-### Installation
+## Quickstart
+
+### Install
 
 The `hobj` package works for Python >=3.12. After cloning this repository on your machine, navigate to this directory in your shell and run:
 
 ``` pip install -e .```
 
-### Quickstart: comparing a linear learner against human learning data 
+### Using `hobj` to comparing a linear learner against human learning data 
 
 The template script below shows you how you can run a benchmark on a linear learning model based on your image encoding model. 
 
@@ -61,10 +61,14 @@ Note that on first use, the packaged dataset is downloaded automatically into `.
 To use a different location, pass `cachedir=...` to a data loader or benchmark
 constructor, or prefetch manually with `hobj-download-data --cachedir /path/to/data`.
 
-For more details, check out `examples/`.
+For more details (e.g., how to load the raw behavioral data or images), check out the Jupyter notebooks in `examples/`.
+
+### Need help or have questions?
+
+Please don't hesitate to send me an email ([mil@mit.edu](mailto:name@example.com)), or open an issue on this repo!
 
 
-### Citation
+## Citation
 
 ```
 @article{lee2023well,
@@ -80,5 +84,5 @@ For more details, check out `examples/`.
 ```
 
 
-### Changes to codebase since publication
+## Changes to codebase since publication
 This codebase was refactored in 2026 to improve the accessibility, performance, and quality of the code. Along the way, minor changes to the statistical analysis of the original codebase were introduced (see [changelist](site/changelist.md)). To see the codebase at the time of publication, check out the repo with the `v1` tag [here](https://github.com/himjl/hobj/releases/tag/v1).
