@@ -246,3 +246,15 @@ def test_resolve_data_root_extracts_nested_images_archive_without_redownload(
     assert resolved_cache == custom_cache.resolve()
     assert (custom_cache / "images" / "highvar.png").exists()
     assert not (custom_cache / "images.tar.gz").exists()
+
+
+def test_get_default_data_root_uses_user_scoped_directory(monkeypatch) -> None:
+    monkeypatch.setattr(
+        download_module,
+        "user_data_dir",
+        lambda *args, **kwargs: "/tmp/hobj-platformdirs-root",
+    )
+
+    resolved_path = download_module._get_default_data_root()
+
+    assert resolved_path == Path("/tmp/hobj-platformdirs-root/data").resolve()

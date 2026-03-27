@@ -18,12 +18,16 @@ dependencies = [
     "numpy>=2.2",
     "pandas>=2.2",
     "matplotlib>=3.9",
+    "platformdirs>=4.3",
     "requests>=2.32",
     "tqdm>=4.67",
     "pydantic>=2.10",
     "xarray>=2025.1",
     "scipy>=1.17.1",
 ]
+
+[project.scripts]
+hobj-download-data = "hobj.data.download:main"
 
 [dependency-groups]
 dev = [

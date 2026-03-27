@@ -57,6 +57,13 @@ print(result.msen, result.msen_CI95)
 # print(result.model_statistics)
 ```
 
+On first use, the packaged dataset is downloaded automatically into a
+user-scoped data directory managed by `platformdirs` rather than into the
+repository root. On macOS this is typically
+`~/Library/Application Support/hobj/data`.
+To use a different location, pass `cachedir=...` to a data loader or benchmark
+constructor, or prefetch manually with
+`hobj-download-data --cachedir /path/to/data`.
 
 For more details (e.g., how to load the raw behavioral data or images in Python), check out the Jupyter notebooks in `examples/`.
 

@@ -11,6 +11,7 @@ from tempfile import TemporaryDirectory
 from urllib.parse import urlparse
 
 import requests
+from platformdirs import user_data_dir
 from tqdm import tqdm
 
 
@@ -30,17 +31,18 @@ EXPECTED_DATA_RELATIVE_PATHS = (
 _DOWNLOAD_CHUNK_SIZE_BYTES = 1024 * 1024
 
 
-def _get_repo_root() -> Path:
-    """Return the repository root for this package."""
-    return Path(__file__).resolve().parents[2]
-
-
 def _get_default_data_root(repo_root: Path | None = None) -> Path:
-    """Return the default packaged data directory."""
-    resolved_repo_root = (
-        repo_root if repo_root is not None else _get_repo_root()
-    ).resolve()
-    return resolved_repo_root / "data"
+    """Return the default packaged data directory.
+
+    Args:
+        repo_root: Unused legacy parameter kept for compatibility with the
+            public function signature.
+
+    Returns:
+        A user-scoped persistent data directory outside the installed package.
+    """
+    del repo_root
+    return Path(user_data_dir("hobj", appauthor=False)).resolve() / "data"
 
 
 def _get_missing_expected_paths(data_root: Path) -> list[Path]:
